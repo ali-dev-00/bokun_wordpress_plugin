@@ -1,0 +1,507 @@
+.custom-bokun-calendar-wrapper {
+    max-width: 700px !important;
+    margin: auto !important;
+}
+/* Calendar Header */
+.custom-bokun-calendar-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 20px !important;
+}
+.custom-bokun-nav-button {
+    font-size: 18px !important;
+    color: #007BFF !important;
+    border: none !important;
+    background: none !important;
+    cursor: pointer !important;
+    transition: color 0.3s ease !important;
+}
+.custom-bokun-nav-button:hover {
+    color: #0056b3 !important;
+}
+.custom-bokun-month-dropdown {
+    display: flex !important;
+    align-items: center !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    color: #333 !important;
+}
+.custom-bokun-dropdown-icon {
+    margin-left: 5px !important;
+    font-size: 14px !important;
+    color: #007BFF !important;
+    display: none !important;
+}
+/* Calendar Table */
+.custom-bokun-calendar-cells {
+    margin-top: 10px !important;
+}
+.custom-bokun-calendar-cell.empty {
+    visibility: hidden;
+    /* Optional: Makes the cell invisible */
+    border: none !important;
+    /* Ensures no border appears on empty cells */
+    background: transparent;
+    /* Ensures a transparent background */
+}
+#table-header .custom-bokun-row {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    text-align: center !important;
+    font-weight: normal !important;
+    color: #555 !important;
+    text-transform: uppercase !important;
+    padding-bottom: 10px !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+}
+#table-body {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    gap: 5px !important;
+    margin-top: 10px !important;
+}
+.custom-bokun-calendar-cell {
+    text-align: center !important;
+    padding: 10px !important;
+    border-radius: 5px !important;
+    background-color: #fff !important;
+    color: #333 !important;
+    font-size: 0.9rem !important;
+    font-weight: normal !important;
+    transition: background-color 0.3s ease !important;
+    cursor: pointer !important;
+    border: 1px solid #ddd !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    height: 40px !important;
+}
+.custom-bokun-calendar-cell.disabled {
+    cursor: not-allowed;
+    /* Disable pointer events */
+    color: #aaa;
+    /* Light gray color for text */
+    background: none !important;
+    /* Light gray background */
+    border: none !important;
+    /* Subtle border for consistency */
+}
+.custom-bokun-calendar-cell.disabled span {
+    pointer-events: none;
+    /* Prevent interaction with inner content */
+    opacity: 0.5;
+    /* Reduce visibility for disabled cells */
+}
+.custom-bokun-calendar-cell:hover {
+    background-color: #1d57c726 !important;
+}
+.custom-bokun-calendar-cell.disabled {
+    color: #ccc !important;
+    background-color: none !important;
+    border: none !important;
+    pointer-events: none !important;
+}
+.custom-bokun-calendar-cell .custom-bokun-date-value {
+    font-size: 0.7rem !important;
+    color: #4caf50 !important;
+    font-weight: normal !important;
+}
+.custom-bokun-calendar-cell.highlighted {
+    background-color: #e6f7ff !important;
+    border-color: #007BFF !important;
+}
+/* Time and Package View */
+#time-package-view {
+    margin-top: 20px !important;
+}
+#time-package-view h4{
+    font-size: 24px !important;
+    font-weight: bold !important;
+}
+#time-options {
+    display: flex !important;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-content: center;
+    align-items: center;
+    gap: 10px !important;
+    margin-bottom: 20px !important;
+}
+.custom-bokun-time-slot {
+    padding: 10px 10px !important;
+    border: none !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    transition: background 0.3s !important;
+    background-color: transparent !important;
+    color: #000000 !important;
+    font-size: 16px !important;
+    font-weight: normal !important;
+    border: 1px solid #DDDDDD !important;
+}
+.custom-bokun-time-slot:hover {
+    background: #cadbf078 !important;
+}
+.custom-bokun-time-slot i {
+    color: #007BFF;
+    margin-right: 5px;
+}
+.custom-bokun-time-slot.selected i {
+    color: #1D57C7;
+}
+.custom-bokun-time-slot:hover i {
+    color: #007BFF;
+}
+.custom-bokun-time-slot.selected{
+    background-color: #007bff !important;
+    color: #ffffff !important;
+}
+.custom-bokun-package-container {
+    margin-top: 20px !important;
+}
+.custom-bokun-package {
+    border: 1px solid #ddd !important;
+    border-radius: 5px !important;
+    margin-bottom: 10px !important;
+    cursor: pointer !important;
+}
+.custom-bokun-package-title {
+    margin: 0 !important;
+    padding: 10px !important;
+    background: #f5f5f5 !important;
+    font-weight: bold !important;
+}
+.custom-bokun-package-content {
+    padding: 10px !important;
+    background: #fff !important;
+    display: none;
+    font-size: 14px !important;
+}
+.custom-bokun-time-slot.selected .fa-clock {
+    color: #FFFFFF !important;
+}
+.custom-bokun-package-option {
+    border: 2px solid #ddd;
+    border-radius: 5px !important;
+    margin-bottom: 15px !important;
+    transition: border 0.3s ease-in-out !important;
+    padding: 5px !important;
+    cursor: pointer;
+    position: relative;
+}
+.custom-bokun-package-option.selected-package::after{
+    content: "Selected";
+    position: absolute;
+    top: -10px;
+    right: 10px;
+    background-color: #007BFF;
+    padding: 2px 4px;
+    color: #ffffff;
+    font-size: 12px;
+    border-radius: 4px;
+}
+.custom-bokun-package-option .package-option-title {
+    font-weight: 100;
+    font-size: 14px !important;
+    padding: 10px;
+    overflow: hidden;
+}
+.custom-bokun-package-option .package-option-title:hover {
+    text-wrap: wrap;
+    overflow: visible;
+}
+.custom-bokun-package-option .package-option-price {
+    font-weight: 100;
+    font-size: 14px !important;
+    padding: 10px;
+    display: flex;
+    gap : 2px;
+}
+.custom-bokun-package-option .custom-bokun-package-content {
+    padding: 10px;
+    background: #f9f9f9;
+    border-top: 1px solid #e0e0e0;
+    display: none;
+}
+.custom-bokun-package-option.selected-package {
+    border: 2px solid #007BFF !important;
+}
+.custom-bokun-selected-label {
+    font-size: 12px !important;
+    font-weight: bold !important;
+    position: absolute !important;
+    top: -15px !important;
+    right: 15px !important;
+    background: #007BFF !important;
+    color: white !important;
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
+    display: none;
+}
+.custom-bokun-package-option .package-option-sub-title {
+    font-weight: 100;
+    font-size: 14px !important;
+    padding: 0px 10px;
+    padding-bottom: 10px;
+    overflow: hidden;
+}
+.custom-bokun-package-option.selected-package .custom-bokun-selected-label {
+    display: block !important;
+}
+.custom-bokun-package-option.selected-package .custom-bokun-package-content{
+    display: block;
+}
+.custom-bokun-package-option .custom-bokun-package-header {
+    font-size: 16px !important;
+    font-weight: bold !important;
+}
+.custom-bokun-selected-date {
+    margin: 20px 0 !important;
+    padding: 15px !important;
+    border: 2px solid #007BFF !important;
+    border-radius: 5px !important;
+    font-weight: bold !important;
+    text-align: center !important;
+}
+#checkout-button{
+    padding: 15px 20px;
+    background: #ccc;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: not-allowed;
+    width: 90%;
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    align-items: center;
+}
+.custom-bokun-checkout-button {
+    margin-top: 20px !important;
+    padding: 10px 15px !important;
+    cursor: not-allowed !important;
+    background: #ccc !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 5px !important;
+    font-weight: bold !important;
+}
+.custom-bokun-checkout-button.enabled {
+    background: #007BFF !important;
+    cursor: pointer !important;
+}
+/* Ticket Styling */
+.custom-bokun-ticket-wrapper {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+.custom-bokun-outer {
+    display: flex !important;
+    width: 100% !important;
+    background: #fff !important;
+    border-radius: 10px !important;
+    position: relative !important;
+    border: 1px solid #ddd !important;
+    padding: 5px !important;
+    justify-content: space-between !important;
+    font-family: 'Roboto', sans-serif !important;
+    rotate: -4deg !important;
+    margin: 30px 0 !important;
+}
+.custom-bokun-ticket {
+    display: flex !important;
+    width: 100% !important;
+    min-height: 130px;
+    background: #fff !important;
+    border-radius: 10px !important;
+    position: relative !important;
+    border: 1px solid #ddd !important;
+    padding: 20px 15px !important;
+    justify-content: space-between !important;
+    font-family: 'Roboto', sans-serif !important;
+    rotate: 5deg !important;
+}
+/* Left Section */
+.custom-bokun-ticket-left {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+    flex: 1 !important;
+    flex-wrap: nowrap !important;
+    align-content: center !important;
+    align-items: flex-start !important;
+}
+.custom-bokun-ticket-left  h3{
+    font-weight: normal !important;
+    font-size: 1em !important;
+    padding-bottom: 20px !important;
+}
+.custom-bokun-ticket-title {
+    font-size: 1.2rem !important;
+    font-weight: bold !important;
+    color: #0056b3 !important;
+    margin: 0 !important;
+}
+.custom-bokun-ticket-participant {
+    font-size: 0.9rem !important;
+    color: #333 !important;
+    font-weight: bold !important;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start; /* Align items in the center horizontally */
+    align-items: center; /* Align items in the center vertically */
+    width: 100%; /* Ensure each participant spans the full width */
+    margin: 0px !important;
+}
+/* Middle Tear Line */
+.custom-bokun-ticket-tear-line {
+    flex: 0.1 !important;
+    background: #f1f1f1 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    position: relative !important;
+    text-align: center !important;
+    padding: 10px 0 !important;
+}
+.custom-bokun-ticket-tear-line::before,
+.custom-bokun-ticket-tear-line::after {
+    content: '' !important;
+    position: absolute !important;
+    width: 20px !important;
+    height: 20px !important;
+    background-color: #ffffff !important;
+    border-radius: 50% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 2 !important;
+}
+.custom-bokun-ticket-tear-line::before {
+    top: -15px !important;
+}
+.custom-bokun-ticket-tear-line::after {
+    bottom: -15px !important;
+}
+.custom-bokun-ticket-tear-line span {
+    font-size: 10px !important;
+    color: #8e8e8e !important;
+    writing-mode: vertical-rl !important;
+    transform: rotate(180deg) !important;
+    letter-spacing: 2px !important;
+    text-align: center !important;
+}
+/* Right Section */
+.custom-bokun-ticket-right {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    text-align: right !important;
+    flex: 1 !important;
+    color: #333 !important;
+}
+.custom-bokun-ticket-time {
+    font-size: 1.1rem !important;
+    font-weight: bold !important;
+    color: #0056b3 !important;
+    display: flex;
+    flex-direction: column;
+    align-content: flex-end;
+    justify-content: center;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+.custom-bokun-ticket-time .ticket-time-display{}
+.custom-bokun-ticket-time .ticket-time-badge{
+    font-size: 12px;
+    line-height: 12px;
+    font-weight: normal;
+    color: rgb(52, 64, 78);
+    background: #f5f5f5;
+    padding: 2px 4px;
+    border-radius: 4px;
+    border: 1px solid rgb(221, 221, 221);
+}
+.custom-bokun-ticket-date {
+    font-size: 1rem !important;
+    color: #666 !important;
+}
+.custom-bokun-ticket-total {
+    font-size: 1rem !important;
+    color: #333 !important;
+    font-weight: bold !important;
+}
+.custom-bokun-ticket-total span {
+    font-size: 1rem !important;
+    color: #000 !important;
+    font-weight: normal !important;
+}
+.custom-bokun-ticket-total span#ticket-total {
+    font-size: 1.2rem !important;
+    color: #000 !important;
+    font-weight: bold !important;
+}
+/* Placeholder Styles */
+.custom-bokun-ticket-placeholder {
+    border-radius: 5px !important;
+    height: 20px !important;
+    margin-bottom: 10px !important;
+}
+.custom-bokun-footer-powered {
+    justify-content: center !important;
+    display: flex !important;
+    margin-top: 50px !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+@media screen and (max-width: 480px) {
+    #table-header .custom-bokun-row {
+        grid-template-columns: repeat(7, 1fr) !important;
+    }
+    #table-body {
+        grid-template-columns: repeat(7, 1fr) !important;
+    }
+    .custom-checkout-right-section {
+        padding: 5px !important;
+    }
+    .custom-bokun-calendar-cell{
+        padding: 8px 4px !important;
+    }
+    #table-header .custom-bokun-row{
+        font-size: 12px !important;
+    }
+    .custom-bokun-month-dropdown{
+        text-align:center !important;
+    }
+}
+
+.package-options-error{
+    color: red;
+    text-align: center;
+    font-size: 16px !important;
+}
+
+.custom-bokun-time-slot .time-slot-time{
+    display: block !important;
+}
+.custom-bokun-time-slot .time-slot-badge{
+    font-size: 12px;
+    line-height: 12px;
+    font-weight: normal;
+    color: rgb(52, 64, 78);
+    background: #f5f5f5;
+    padding: 2px 4px;
+    display: block;
+    border-radius: 4px;
+    border: 1px solid rgb(221, 221, 221);
+    margin-top: 10px;
+}
+.custom-bokun-time-slot.selected .time-slot-badge{
+    background-color: rgba(0, 0, 0, 0);
+    color: white;
+}

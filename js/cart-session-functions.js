@@ -1,0 +1,1776 @@
+var MainContactFormData;
+var activityTabData = {};
+jQuery(function ($) {
+  function fillForm(moveNext = false) {
+    console.log("fill form function called");
+    if (!MainContactFormData) {
+      console.log("No form data found!");
+      return;
+    }
+    $("#contactForm")
+      .find("input, textarea, select")
+      .each(function () {
+        const questionId = $(this).data("question-id");
+        if (questionId && MainContactFormData[questionId] !== undefined) {
+          const value = MainContactFormData[questionId];
+          if (questionId === "phoneNumber" && window.iti) {
+            window.iti.setNumber(value);
+          } else {
+            $(this).val(value);
+          }
+        }
+      });
+    if (moveNext === true) {
+      moveToNextStep();
+    }
+  }
+  function formatDateToISO(dateString) {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+  function formatCustomDateToISO(dateString) {
+    const [_, monthName, day, year] = dateString.match(
+      /^[A-Za-z]+,\s(\w+)\s(\d+)\s(\d+)/
+    );
+    const monthMap = {
+      January: "01",
+      February: "02",
+      March: "03",
+      April: "04",
+      May: "05",
+      June: "06",
+      July: "07",
+      August: "08",
+      September: "09",
+      October: "10",
+      November: "11",
+      December: "12",
+    };
+    const month = monthMap[monthName];
+    const dayPadded = String(day).padStart(2, "0");
+    return `${year}-${month}-${dayPadded}`;
+  }
+  async function handleCheckoutModalApiCalls(
+    flag = "add",
+    productConfirmationCode = null,
+    bookableExtras = null,
+    handleExtrasSection = false
+  ) {
+    console.log("api calls made");
+    const $button = $(".checkoutAction");
+    var activityId = $button.data("activity-id");
+    var rateId = $button.data("rate-id");
+    var $selectedTimeSlot = $(".custom-bokun-time-slot.selected");
+    var passengers = JSON.parse($button.attr("data-pricing-category-id"));
+    var date = $button.data("date");
+    var startTimeId = $selectedTimeSlot.data("starttimeid");
+    date = formatDateToISO(date);
+    if (
+      (bookableExtras === null && !activityId) ||
+      !rateId ||
+      !startTimeId ||
+      !date ||
+      !passengers
+    ) {
+      console.log(
+        "Missing required fields:",
+        activityId,
+        rateId,
+        startTimeId,
+        date,
+        passengers
+      );
+    }
+    const sessionId = getOrCreateSessionId();
+    try {
+      if (bookableExtras !== null && flag === "add") {
+        var requestDataForCart = bookableExtras;
+        console.log("if condition runs");
+      } else if (flag === "add") {
+        console.log("else condition runs");
+        var requestDataForCart = {
+          action: "add_to_cart",
+          session_id: sessionId,
+          activity_id: activityId,
+          rate_id: rateId,
+          start_time_id: startTimeId,
+          date: date,
+          passengers: passengers,
+          language: localStorage.getItem("language"),
+          currency: localStorage.getItem("currency"),
+        };
+      }
+      console.log("requestDataForCart for request", requestDataForCart);
+      const addToCart = () =>
+        $.ajax({
+          url: bokunAjax.ajaxUrl,
+          method: "POST",
+          data: requestDataForCart,
+        });
+      const fetchCartDetails = () =>
+        $.ajax({
+          url: bokunAjax.ajaxUrl,
+          method: "POST",
+          data: {
+            action: "get_cart_details",
+            session_id: sessionId,
+            language: localStorage.getItem("language"),
+            currency: localStorage.getItem("currency"),
+          },
+        });
+      const removeActivityFromCart = () =>
+        $.ajax({
+          url: bokunAjax.ajaxUrl,
+          method: "POST",
+          data: {
+            action: "remove_activity_form_cart",
+            session_id: sessionId,
+            product_confirmation_code: productConfirmationCode,
+            language: localStorage.getItem("language"),
+            currency: localStorage.getItem("currency"),
+          },
+        });
+
+      const fetchPickupPlaces = () =>
+        $.ajax({
+          url: bokunAjax.ajaxUrl,
+          method: "POST",
+          data: {
+            action: "checkout_pick_up_places",
+            language: localStorage.getItem("language"),
+            currency: localStorage.getItem("currency"),
+            experience_id: activityId,
+          },
+        });
+      const fetchCheckoutOptions = () =>
+        $.ajax({
+          url: bokunAjax.ajaxUrl,
+          method: "POST",
+          data: {
+            action: "get_checkout_options",
+            session_id: sessionId,
+            language: localStorage.getItem("language"),
+            currency: localStorage.getItem("currency"),
+          },
+        });
+      let cartResponse;
+      if (flag === "remove") {
+        cartResponse = await removeActivityFromCart();
+      }
+      if (flag === "add") {
+        cartResponse = await addToCart();
+      }
+      if (flag === "show") {
+        cartResponse = await fetchCartDetails();
+      }
+      if (cartResponse.success) {
+        const totalPrice = cartResponse.data.totalPrice ?? 0;
+        if (totalPrice <= 0) {
+
+          // $(".custom-bokun-modal").css("display", "none");
+          // $(".custom-checkout-modal-overlay").fadeOut();
+          // $("body").css("overflow", "auto");
+          const message = response.data.fields.errorResponse ?? "Invalid Data";
+          $('.error-message-cart').html(message);
+          console.log("Cart is empty, displaying error message.");
+          return;
+
+        }
+        const pickupPlacesResponse = await fetchPickupPlaces();
+        const checkoutOptionsResponse = await fetchCheckoutOptions();
+
+        if (!pickupPlacesResponse || !checkoutOptionsResponse) {
+          console.error("One or more API calls failed.");
+          return;
+        }
+        if (handleExtrasSection === true) {
+          checkoutModalRightSection(checkoutOptionsResponse, cartResponse),
+            handleExtras(cartResponse);
+        } else {
+          handleCheckoutModal(
+            pickupPlacesResponse,
+            checkoutOptionsResponse,
+            cartResponse
+          );
+          $(".custom-checkout-modal-overlay").css("display", "flex");
+          $(".custom-bokun-modal-content").hide();
+          $("body").css("overflow", "hidden");
+          handleExtras(cartResponse);
+        }
+
+
+
+      } else {
+        console.error("Add to cart failed.", cartResponse);
+      }
+    } catch (error) {
+      console.error("An error occurred during API calls:", error);
+    }
+  }
+  function handleExtras(cartResponse) {
+    console.log("Loop running for extras...");
+    const activityList = cartResponse.data.activityBookings;
+
+    activityList.forEach((item, index) => {
+      const activityId = item?.activity?.id;
+      const rateId = item?.rate?.id;
+      const productConfirmationCode = item.productConfirmationCode;
+      const rate = item.rate;
+      var bookingType = rate?.pricedPerPerson ? "SINGLE_PERSON" : "GROUP";
+      const maxPerBookingForPerPerson = item.pricingCategoryBookings.length;
+      const validatedMaxPerBooking =
+        bookingType === "GROUP" ? 1 : maxPerBookingForPerPerson;
+      if (!activityId || !rateId) {
+        console.warn("Activity or rate ID is missing:", item);
+        return;
+      }
+      $.ajax({
+        url: bokunAjax.ajaxUrl,
+        method: "POST",
+        data: {
+          action: "fetch_experience_price_list",
+          experience_id: activityId,
+          currency: localStorage.getItem("currency"),
+        },
+        success: function (priceResponse) {
+          if (priceResponse) {
+            $.ajax({
+              url: bokunAjax.ajaxUrl,
+              method: "POST",
+              data: {
+                action: "fetch_experience_details_v2",
+                experience_id: activityId,
+                currency: localStorage.getItem("currency"),
+                language: localStorage.getItem("language"),
+              },
+              success: function (detailsResponse) {
+                const bookableExtras =
+                  detailsResponse.data.bookableExtras || [];
+                const matchingRate =
+                  priceResponse.data.pricesByDateRange?.[0]?.rates.find(
+                    (rate) => rate.rateId === rateId
+                  );
+
+                if (!matchingRate) {
+                  console.warn(`No matching rate found for rateId: ${rateId}`);
+                  return;
+                }
+
+                const extrasHTML = bookableExtras
+                  .map((extra, extraIndex) => {
+                    const {
+                      id: extraId,
+                      title,
+                      information,
+                      price,
+                      photo,
+                    } = extra;
+                    const amount = price || 0;
+                    const currency = localStorage.getItem("currency") || "AED";
+                    const imageUrl = photo?.originalUrl || null;
+                    // if(imageUrl === null && bookingType === 'SINGLE_PERSON') {
+                    //   bookingType = 'GROUP';
+                    // }
+                    const existingExtra = item.extraBookings.find(
+                      (e) => e.extra.id === extraId
+                    );
+                    const initialQuantity = existingExtra
+                      ? existingExtra.unitCount
+                      : 0;
+
+                    if (bookingType === "SINGLE_PERSON") {
+                      const checkboxContainerId = `checkboxContainer_${activityId}_${extraId}`;
+                      console.log("passengercheckboxes", item.pricingCategoryBookings);
+                      const passengerCheckboxes = item.pricingCategoryBookings
+                        .map(
+                          (passenger, i) =>
+                            `<label>
+                                  <input 
+                                    type="checkbox" 
+                                    class="extra-checkbox" 
+                                    data-extra-id="${extraId}" 
+                                    data-passenger-index="${i}" 
+                                    id="extraCheckbox_${extraId}_${i}">
+                                  Traveller ${i + 1}
+                              </label>`
+                        )
+                        .join("");
+
+                      return `
+                          <div class="custom-checkout-experience-box" id="extra_${extraId}_${index}_${extraIndex}">
+                              <div class="custom-checkout-experience-header">
+                                  ${imageUrl !== null ? `<img src="${imageUrl}" alt="${title}" class="custom-checkout-experience-img">` : ''}
+                                  <div class="custom-checkout-experience-details">
+                                      <h3>${title}</h3>
+                                      <span>${currency} ${amount.toFixed(2)} Per Person</span>
+                                  </div>
+                              </div>
+                              <div id="${checkboxContainerId}" class="custom-traveller-checkboxes">
+                                  ${passengerCheckboxes}
+                              </div>
+                              <p>${information || "Information will be populated later"}</p>
+                          </div>`;
+                    }
+                    else if (bookingType === "GROUP") {
+                      return `
+                         <div class="custom-bokun-tour-guide-card" id="extra_${index}_${extraIndex}">
+                            <div class="custom-bokun-top">
+                                <div class="custom-bokun-title">${title}</div>
+                                <div class="custom-bokun-price">${currency} <span id="total-price-${index}-${extraIndex}">${amount.toFixed(2)}</span></div>
+                            </div>
+                            <div class="custom-bokun-quantity-controls">
+                                <button class="custom-bokun-quantity-button decrement" data-extra-id="${extraId}" data-index="${index}" data-extra-index="${extraIndex}">-</button>
+                                <input type="text" class="custom-bokun-quantity-input" id="quantity-input-${index}-${extraIndex}" value="${initialQuantity}" readonly>
+                                <button class="custom-bokun-quantity-button increment" data-extra-id="${extraId}" data-index="${index}" data-extra-index="${extraIndex}">+</button>
+                            </div>
+                            <p>${information ||
+                        "Information will be populated later"
+                        }</p>
+                        </div>`;
+                    }
+                  })
+                  .join("");
+                const extraContainerId = `bookableExtras_${index}`;
+                const extrasContainer = document.getElementById(extraContainerId);
+                console.log("extras conatiner", extraContainerId);
+                if (extrasContainer) {
+                  extrasContainer.innerHTML = extrasHTML;
+
+                  bookableExtras.forEach((extra, extraIndex) => {
+                    const { id: extraId, price } = extra;
+                    if (bookingType === "GROUP")
+                      attachQuantityHandlersGroup(
+                        `quantity-input-${index}-${extraIndex}`,
+                        `total-price-${index}-${extraIndex}`,
+                        price || 0,
+                        validatedMaxPerBooking,
+                        extraId,
+                        productConfirmationCode,
+                        item
+                      );
+                    else {
+                      const checkboxContainerId = `checkboxContainer_${activityId}_${extraId}`;
+                      attachQuantityHandlersSinglePerson(
+                        checkboxContainerId,
+                        extraContainerId,
+                        maxPerBookingForPerPerson,
+                        validatedMaxPerBooking,
+                        extraId,
+                        productConfirmationCode,
+                        item
+                      );
+                    }
+                  });
+                } else {
+                  console.warn(
+                    `Container for activity ID ${activityId} not found.`
+                  );
+                }
+              },
+              error: function (xhr, status, error) {
+                console.error("AJAX error:", status, error);
+              },
+            });
+          } else {
+            console.error("Error:", priceResponse.data || "Unknown error");
+          }
+        },
+        error: function (error) {
+          console.error(
+            "AJAX Error:",
+            error.responseJSON?.message || error.statusText || "Request failed"
+          );
+        },
+      });
+    });
+  }
+
+  function attachQuantityHandlersGroup(
+    quantityInputId,
+    totalPriceElementId,
+    price,
+    maxPerBooking,
+    extraId,
+    productConfirmationCode,
+    activityBookingDetails
+  ) {
+    console.log("max per booking", maxPerBooking);
+    const quantityInput = document.getElementById(quantityInputId);
+    const totalPriceElement = document.getElementById(totalPriceElementId);
+    const containerDiv = quantityInput?.closest(".custom-bokun-tour-guide-card");
+    const decrementButton = quantityInput?.parentNode.querySelector(".decrement");
+    const incrementButton = quantityInput?.parentNode.querySelector(".increment");
+    const minQuantity = 0;
+    let isProcessing = false;
+
+    let initialQuantity = activityBookingDetails?.extraBookings.length || 0;
+
+    if (activityBookingDetails?.extraBookings.length > 0) {
+      const existingExtra = activityBookingDetails.extraBookings.find(
+        (extra) => extra.extra.id === extraId
+      );
+      initialQuantity = existingExtra?.unitCount || 0;
+    }
+
+    let currentQuantity = initialQuantity;
+
+    const passengers = activityBookingDetails.pricingCategoryBookings.map(
+      (passenger) => ({
+        pricingCategoryId: passenger.pricingCategoryId,
+        groupSize: passenger.pricingCategory?.groupSize || 1,
+      })
+    );
+
+    const validatedMaxPerBooking = Math.min(maxPerBooking, passengers.length);
+
+    function toggleButtons(disable = false) {
+      incrementButton.disabled = disable || currentQuantity >= validatedMaxPerBooking;
+      decrementButton.disabled = disable || currentQuantity <= minQuantity;
+    }
+
+    function updatePrice() {
+      if (totalPriceElement) {
+        totalPriceElement.textContent = price.toFixed(2);
+      }
+      toggleButtons();
+    }
+
+    async function updatePassengers(quantity) {
+      if (isProcessing) return;
+      isProcessing = true;
+      toggleButtons(true); // Disable both buttons during API call
+
+      try {
+        await removePreviousActivity(productConfirmationCode);
+
+        const extras =
+          quantity > 0
+            ? [{ extraId, unitCount: quantity }]
+            : [];
+
+        const requestDataForCart = {
+          action: "add_to_cart",
+          session_id: getOrCreateSessionId(),
+          activity_id: activityBookingDetails.activity.id,
+          rate_id: activityBookingDetails.rate.id,
+          start_time_id: activityBookingDetails.startTime.id,
+          date: formatCustomDateToISO(activityBookingDetails.dateString),
+          passengers,
+          ...(extras.length > 0 && { extras }), // Only include extras if quantity > 0
+          language: localStorage.getItem("language"),
+          currency: localStorage.getItem("currency"),
+        };
+
+        await handleCheckoutModalApiCalls("add", null, requestDataForCart, true);
+      } catch (error) {
+        console.error("Error processing passengers:", error);
+      } finally {
+        setTimeout(() => {
+          isProcessing = false;
+          toggleButtons(false); // Enable buttons after API call completes
+        }, 500);
+      }
+    }
+
+    incrementButton?.addEventListener("click", async () => {
+      if (isProcessing || currentQuantity >= validatedMaxPerBooking) return;
+      currentQuantity++;
+      quantityInput.value = currentQuantity;
+      updatePrice();
+      await updatePassengers(currentQuantity);
+    });
+
+    decrementButton?.addEventListener("click", async () => {
+      if (isProcessing || currentQuantity <= minQuantity) return;
+      currentQuantity--;
+      quantityInput.value = currentQuantity;
+      updatePrice();
+      await updatePassengers(currentQuantity);
+    });
+
+    function setInitialValues() {
+      if (quantityInput) quantityInput.value = currentQuantity;
+      if (totalPriceElement) totalPriceElement.textContent = price.toFixed(2);
+      toggleButtons();
+    }
+
+    setInitialValues();
+  }
+
+  function attachQuantityHandlersSinglePerson(
+    checkboxContainerId,
+    parentContainerId,
+    maxPerBooking,
+    validatedMaxPerBooking,
+    extraId,
+    productConfirmationCode,
+    activityBookingDetails
+  ) {
+    const parentContainer = document.getElementById(parentContainerId);
+    const extrasContainer = document.getElementById(checkboxContainerId);
+    if (!extrasContainer) {
+      console.error(`Checkbox container with ID ${extrasContainer} not found.`);
+      return;
+    }
+    console.log("Checkbox container:", extrasContainer);
+
+    const checkboxes = extrasContainer.querySelectorAll('input[type="checkbox"]');
+    const checkedExtras = new Map();
+    let isProcessing = false;
+
+    // Initialize checked extras map
+    activityBookingDetails.pricingCategoryBookings.forEach((booking, passengerIndex) => {
+      const bookedExtras = new Set(booking.extras?.map((extra) => extra.extra.id) || []);
+      checkedExtras.set(passengerIndex, bookedExtras);
+    });
+
+    function setCheckboxesState(disabled) {
+      extrasContainer.classList.toggle('disabled', disabled);
+      checkboxes.forEach(cb => cb.disabled = disabled);
+      const parentContainerCheckboxes = parentContainer.querySelectorAll('input[type="checkbox"]');
+      parentContainer.classList.toggle('disabled', disabled);
+      parentContainerCheckboxes.forEach(cb => cb.disabled = disabled);
+    }
+
+    async function processActivityUpdate(clickedCheckbox, passengerIndex, extraIdForCheckbox) {
+      if (isProcessing) return;
+      isProcessing = true;
+
+      try {
+        setCheckboxesState(true);
+
+        // Toggle checkedExtras state
+        const isChecked = clickedCheckbox.checked;
+        if (isChecked) {
+          checkedExtras.get(passengerIndex)?.add(extraIdForCheckbox);
+        } else {
+          checkedExtras.get(passengerIndex)?.delete(extraIdForCheckbox);
+        }
+
+        const passengers = activityBookingDetails.pricingCategoryBookings.map((passenger, index) => ({
+          pricingCategoryId: passenger.pricingCategoryId,
+          groupSize: 1,
+          extras: Array.from(checkedExtras.get(index) || []).map(id => ({
+            extraId: id,
+            unitCount: 1
+          }))
+        }));
+
+        await removePreviousActivity(productConfirmationCode);
+
+        const requestDataForCart = {
+          action: "add_to_cart",
+          session_id: getOrCreateSessionId(),
+          activity_id: activityBookingDetails.activity.id,
+          rate_id: activityBookingDetails.rate.id,
+          start_time_id: activityBookingDetails.startTime.id,
+          date: formatCustomDateToISO(activityBookingDetails.dateString),
+          passengers,
+          language: localStorage.getItem("language"),
+          currency: localStorage.getItem("currency")
+        };
+
+        await handleCheckoutModalApiCalls("add", null, requestDataForCart, true);
+
+      } catch (error) {
+        console.error("Error processing activity update:", error);
+        clickedCheckbox.checked = !clickedCheckbox.checked; // Revert if error occurs
+      } finally {
+        setTimeout(() => {
+          setCheckboxesState(false);
+          isProcessing = false;
+        }, 500);
+      }
+    }
+
+    checkboxes.forEach((checkbox) => {
+      const passengerIndex = parseInt(checkbox.getAttribute("data-passenger-index"), 10);
+      const extraIdForCheckbox = parseInt(checkbox.getAttribute("data-extra-id"), 10);
+
+      // Set initial checked state
+      checkbox.checked = checkedExtras.get(passengerIndex)?.has(extraIdForCheckbox) || false;
+
+      checkbox.addEventListener("click", async (event) => {
+        if (isProcessing) {
+          event.preventDefault();
+          return;
+        }
+
+        await processActivityUpdate(checkbox, passengerIndex, extraIdForCheckbox);
+      });
+    });
+
+    return () => {
+      checkboxes.forEach(checkbox => {
+        checkbox.removeEventListener("click", processActivityUpdate);
+      });
+    };
+  }
+
+
+  async function removePreviousActivity(productConfirmationCode) {
+    return new Promise((resolve, reject) => {
+      $.ajax({
+        url: bokunAjax.ajaxUrl,
+        method: "POST",
+        data: {
+          action: "remove_activity_form_cart",
+          session_id: getOrCreateSessionId(),
+          product_confirmation_code: productConfirmationCode,
+          language: localStorage.getItem("language"),
+          currency: localStorage.getItem("currency"),
+        },
+        success: (response) => {
+          if (response.success) {
+            resolve();
+          } else {
+            reject(new Error(response.data.message));
+          }
+        },
+        error: (xhr, status, error) => {
+          reject(new Error(error));
+        },
+      });
+    });
+  }
+
+  function checkoutModalRightSection(checkoutOptionsResponse, cartResponse) {
+    const rightSection = $(".custom-checkout-right-section");
+    const rightSectionContent = `
+    <div class="custom-checkout-promo-box">
+    ${checkoutOptionsResponse.data.options[0].invoice.productInvoices
+        .map((invoice) => {
+          const matchingBooking = cartResponse.data.activityBookings.find(
+            (booking) =>
+              booking.productConfirmationCode === invoice.productConfirmationCode
+          );
+
+          const pickupType = matchingBooking?.rate.pickupPricingType || "N/A";
+          const dropoffType = matchingBooking?.rate.dropoffPricingType || "N/A";
+          const lineItems = invoice.lineItems;
+
+          const passengers =
+            matchingBooking?.pricingCategoryBookings?.length || 0;
+          const extrasCount =
+            lineItems?.filter((item) => item.extraId)?.length || 0;
+
+          console.log("Travellers length:", passengers, lineItems);
+          console.log("Extras count:", extrasCount);
+          const lineItemsContent =
+            lineItems && lineItems.length > 0
+              ? lineItems
+                .map(
+                  (item) =>
+                    `
+                      <div class="custom-checkout-info-row">
+                          <span>${item.title} × ${item.people || item.quantity
+                    }</span>
+                          <span class="info-price">${item.totalAsText}</span>
+                      </div>
+                    `
+                )
+                .join("")
+              : `
+              <div class="custom-checkout-info-row">
+                  <span>Travellers (${passengers})</span>
+                  <span class="info-price">${invoice.totalAsText}</span>
+              </div>
+            `;
+          return `
+          <div class="custom-checkout-promo-item" data-product-code="${invoice.productConfirmationCode
+            }">
+            <div class="custom-checkout-promo-header">
+                <h3>${invoice.product.title}</h3>
+                <span class="custom-checkout-promo-price">${invoice.totalAsText
+            }</span>
+                <button class="custom-checkout-close-icon">&times;</button>
+            </div>
+            <p class="custom-checkout-promo-date">${invoice.dates}</p>
+            <a href="#" class="custom-checkout-promo-showmore" id="showMoreLink">Show more</a>
+            <div class="custom-checkout-expanded-content" id="expandedContent">
+                ${lineItemsContent}
+                <div class="custom-checkout-info-row">
+                    <span>Pick-up</span>
+                    <span class="info-value">${pickupType === "INCLUDED_IN_PRICE"
+              ? "Included"
+              : "Not Included"
+            }</span>
+                </div>
+                <div class="custom-checkout-info-row">
+                    <span>Drop-off</span>
+                    <span class="info-value">${dropoffType === "INCLUDED_IN_PRICE"
+              ? "Included"
+              : "Not Included"
+            }</span>
+                </div>
+            </div>
+            <hr>
+          </div>
+        `;
+        })
+        .join("")}
+    
+        <div class="custom-checkout-promo-code">
+            <label for="promo">Promo Code</label>
+            <div class="custom-checkout-promo-input">
+                <input type="text" id="promo" placeholder="Enter code">
+                <button id="apply-promo" disabled>Apply</button>
+            </div>
+            <div class="promo-code-error"></div>
+        </div>
+        <hr>
+        <div class="custom-checkout-promo-total">
+            <p>Items <span>${checkoutOptionsResponse.data.options[0].formattedAmount
+      }</span></p>
+            <p><strong>Total (AED)</strong> <span class="custom-checkout-total-price">${checkoutOptionsResponse.data.options[0].formattedAmount
+      }</span>
+            </p>
+        </div>
+    </div>
+`;
+    rightSection.html(rightSectionContent);
+    $("#confirmButton").text(`Reserve and Pay Now ${localStorage.getItem("currency")} ${cartResponse.data.totalPrice}`);
+
+    const showMoreLinks = document.querySelectorAll(
+      ".custom-checkout-promo-showmore"
+    );
+    showMoreLinks.forEach((showMoreLink) => {
+      const expandedContent = showMoreLink
+        .closest(".custom-checkout-promo-item")
+        .querySelector(".custom-checkout-expanded-content");
+      showMoreLink.addEventListener("click", function (e) {
+        e.preventDefault();
+        const isVisible = expandedContent.classList.contains("visible");
+        if (isVisible) {
+          expandedContent.classList.remove("visible");
+          expandedContent.style.maxHeight = "0px"; // Collapse content
+          showMoreLink.innerText = "Show more";
+        } else {
+          expandedContent.classList.add("visible");
+          expandedContent.style.maxHeight = expandedContent.scrollHeight + "px";
+          showMoreLink.innerText = "Show less";
+        }
+      });
+    });
+
+
+    const $promoInput = $("#promo");
+    const $promoApplyButton = $(".custom-checkout-promo-input button");
+    $promoInput.on("input", function () {
+      const promoCode = $promoInput.val().trim();
+      if (promoCode) {
+        $promoApplyButton
+          .prop("disabled", false)
+          .addClass("custom-checkout-active");
+      } else {
+        $promoApplyButton
+          .prop("disabled", true)
+          .removeClass("custom-checkout-active");
+      }
+    });
+    const $errorContainer = $(".promo-code-error");
+
+    $promoInput.on("input", function () {
+      const promoCode = $promoInput.val().trim();
+
+      if (promoCode) {
+        $errorContainer.hide();
+      }
+    });
+
+    window.fetchCartDetailsAndUpdateBadge();
+
+  }
+
+  $(document).on(
+    "click",
+    ".custom-checkout-promo-item .custom-checkout-close-icon",
+    function () {
+      const clickedElement = $(this).closest(".custom-checkout-promo-item");
+      const productConfirmationCode = clickedElement.data("product-code");
+      if (!productConfirmationCode) {
+        console.log("Error: Product Confirmation Code is missing.");
+        return;
+      }
+      clickedElement.prop("disabled", true);
+      clickedElement.css("opacity", "0.5");
+      handleCheckoutModalApiCalls("remove", productConfirmationCode, null, false)
+        .then(() => {
+          clickedElement.slideUp(300, function () {
+            $(this).remove();
+            if ($(".custom-checkout-promo-item").length === 0) {
+              $(".custom-checkout-modal-overlay").css("display", "none");
+              $("#modal").css("display", "none");
+              $("body").css("overflow", "auto");
+            }
+            if (MainContactFormData !== null) {
+              fillForm(false);
+            }
+          });
+        })
+        .catch((error) => {
+          console.error("API Call Failed:", error);
+          clickedElement.prop("disabled", false);
+          clickedElement.css("opacity", "1");
+        });
+    }
+  );
+  $(document).on("click", "#cartCheckoutBtn", function () {
+    const $button = $(this);
+    const originalContent = $button.html();
+    $button.prop("disabled", true);
+    $button.html("Loading...");
+    handleCheckoutModalApiCalls("show", null, null, false)
+      .then(() => {
+        $button.prop("disabled", false);
+        $button.html(originalContent);
+        if (MainContactFormData !== null) {
+          fillForm(false);
+        }
+      })
+      .catch((error) => {
+        console.error("API Call Failed:", error);
+        $button.prop("disabled", false);
+        $button.html(originalContent);
+        alert("Something went wrong. Please try again.");
+      });
+  });
+  $(document).on("click", ".checkoutAction", function () {
+    const $button = $(this);
+    const originalContent = $button.html();
+    $button.prop("disabled", true);
+    $button.html("Please wait...");
+    handleCheckoutModalApiCalls("add", null, null, false)
+      .then(() => {
+        $button.prop("disabled", false);
+        if (MainContactFormData !== null) {
+          fillForm(false);
+        }
+        $button.html(originalContent);
+      })
+      .catch((error) => {
+        console.error("API Call Failed:", error);
+        $button.prop("disabled", false);
+        $button.html(originalContent);
+        alert("Something went wrong. Please try again.");
+      });
+  });
+
+  $(document).on("click", ".closeModal", function () {
+    $(".custom-checkout-modal-overlay").css("display", "none");
+    $(".custom-bokun-modal-content").show();
+    $("body").css("overflow", "auto");
+  });
+  $(document).on("click", ".custom-checkout-modal-overlay", function (e) {
+    const $overlay = $(".custom-checkout-modal-overlay");
+    if (e.target === $overlay[0]) {
+      $overlay.css("display", "none");
+      $("body").css("overflow", "auto");
+    }
+  });
+  function getOrCreateSessionId() {
+    let sessionId = localStorage.getItem("bokunSessionId");
+    if (!sessionId) {
+      console.log("No sessionId found. Generating a new one...");
+      $.ajax({
+        url: bokunAjax.ajaxUrl,
+        method: "POST",
+        data: {
+          action: "generate_cart_session",
+          language: localStorage.getItem("language"),
+          currency: localStorage.getItem("currency"),
+        },
+        success: function (response) {
+          if (response.success) {
+            sessionId = response.data.session_id;
+            localStorage.setItem("bokunSessionId", sessionId);
+            console.log("New sessionId generated:", sessionId);
+          } else {
+            console.error("Error generating sessionId:", response.data.message);
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error("AJAX error:", status, error);
+        },
+      });
+    } else {
+      console.log("Existing sessionId found:", sessionId);
+    }
+    return sessionId;
+  }
+  function handleCheckoutModal(
+    pickupPlacesResponse = null,
+    checkoutOptionsResponse = null,
+    cartResponse = null
+  ) {
+    console.log("rendering modal");
+    var checkoutExperience =
+      checkoutOptionsResponse.data.options[0].invoice.productInvoices;
+    console.log("activityBookings", checkoutExperience);
+    const progressbar = $("#progressBar");
+    const checkoutSteps = `
+      ${checkoutOptionsResponse.data.questions.mainContactDetails
+        ? `
+          <div class="custom-checkout-progress-step-container">
+          <div class="custom-checkout-progress-step active" data-step="1">
+            <div class="step-count">1</div> <div class="step-description">Contact Details</div>
+          </div>
+          <div class="custom-checkout-progress-line"></div>
+        `
+        : ""
+      }
+      ${checkoutExperience
+        .map(
+          (experience, index) => `
+        <div id="experienceProgress_${index}" data-activity-id="${experience.product.id
+            }" class="custom-checkout-progress-step" data-step="${index + 2}">
+          <div class="step-count">${index + 2
+            }</div> <div class="step-description">${experience.product.title
+            }</div>
+        </div>
+        <div class="custom-checkout-progress-line"></div>
+      `
+        )
+        .join("")}
+      <div class="custom-checkout-progress-step" data-step="${checkoutExperience.length + 2
+      }">
+        <div class="step-count">${checkoutExperience.length + 2
+      }</div> <div class="step-description">Refund Terms</div>
+      </div>
+      <div class="custom-checkout-progress-line"></div>
+      <div class="custom-checkout-progress-step" data-step="${checkoutExperience.length + 3
+      }">
+        <div class="step-count">${checkoutExperience.length + 3
+      }</div> <div class="step-description">Review</div>
+      </div>
+      </div>
+    `;
+    progressbar.html(checkoutSteps);
+    const tabsContent = $("#leftSection");
+    const tabPage = `
+      ${checkoutOptionsResponse.data.questions.mainContactDetails
+        ? `
+          <div class="custom-checkout-step" data-step="1">
+            <div class="custom-checkout-contact-section">
+              <h2>Main Traveller's Contact Details</h2>
+              <div class="custom-checkout-divider"></div>
+              <form id="contactForm" class="custom-checkout-contact-grid"></form>
+            </div>
+            <div class="custom-checkout-continue-btn">
+              <button id="continueButton">Continue</button>
+            </div>
+          </div>
+        `
+        : ""
+      }
+      ${checkoutExperience
+        .map((experience, index) => {
+          // Find the corresponding activity booking for this experience
+          const activityBooking =
+            checkoutOptionsResponse.data.questions.activityBookings.find(
+              (booking) => booking.activityId === experience.product.id
+            );
+
+          return ` 
+    <div class="custom-checkout-step" data-step="${index + 2
+            }" id="experienceStep_${index}" style="display: none;">
+          <h2 class="custom-checkout-section-title">Complete your booking</h2>
+        <div class="custom-checkout-divider"></div>
+      <div class="custom-checkout-booking-card" data-product-booking-id="${experience.productBookingId
+            }">
+        <img src="${experience.product.keyPhoto?.originalUrl ||
+            "assets/img/default-tour-image.jpg"
+            }" alt="${experience.product.title
+            }" class="custom-checkout-booking-image">
+        <div class="custom-checkout-booking-details">
+          <h3 class="custom-checkout-booking-title">${experience.product.title
+            }</h3>
+          <div class="custom-checkout-booking-info">
+            <p><strong>Travellers</strong><br>${experience.lineItems[0].people
+            } Passengers</p>
+            <p><strong>Departure</strong><br>${experience.dates} Passengers</p>
+          </div>
+        </div>
+      </div>
+      <div class="custom-checkout-booking-summary" id="addExpSection">
+         <h2 class="custom-checkout-section-title">Add to your experience</h2>
+        <div class="custom-checkout-divider"></div>
+      </div>
+        <div class="custom-checkout-pickup-dropoff" id="custom-checkout-pickup-dropoff_${index}">
+            <!-- Pick-up Section -->
+            <div class="custom-pickup-section">
+                 <h3 class="custom-pickup-title">
+                    Pick-up <span class="custom-included-label">Included in price</span>
+                </h3>
+                <div class="custom-form-group" id="pickupDiv_${index}">
+                    <!-- Dynamic dropdown content will be rendered here by JavaScript -->
+                </div>
+                <span id="pickupAttention_${index}" data-time-id="${experience.dates
+            }"></span>
+                <div class="custom-form-group customPickupDiv_${index}" style="margin-top: 15px !important;">
+                    <label class="custom-form-label" for="pickupAddress">Where should we pick you up? *</label>
+                    <input type="text" class="custom-form-input" id="pickupAddress" placeholder="Enter pick-up location" />
+                </div>
+            </div>
+
+            <!-- Drop-off Section -->
+            <div class="custom-dropoff-section">
+                 <h3 class="custom-dropoff-title">
+                     Drop-off <span class="custom-included-label">Included in price</span>
+                </h3>
+                <div class="custom-form-group" id="dropoffDiv_${index}">
+                    <!-- Dynamic dropdown content will be rendered here by JavaScript -->
+                </div>
+                <div class="custom-form-group customDropoffDiv_${index}" style="margin-top: 15px !important;">
+                    <label class="custom-form-label" for="dropoffAddress">Where should we drop you off? *</label>
+                    <input type="text" class="custom-form-input" id="dropoffAddress" placeholder="Enter drop-off location"  />
+                </div>
+            </div>
+       </div>
+      <div id="bookableExtras_${index}" data-activity-id="${experience.product.id}"></div>
+          <div id="ParticipantFormData_${index}">
+         
+          ${activityBooking && (activityBooking.questions?.length > 0 || activityBooking.passengers?.some(
+              (passenger) => passenger.passengerDetails?.length > 0
+            )) ?
+              `        
+              <h2 class="custom-checkout-section-title">Participants</h2>
+              <div class="custom-checkout-divider"></div>
+                <div class="custom-checkout-participant-box">
+
+                ${activityBooking && activityBooking.questions.length > 0 ? `
+
+            <div class="custom-checkout-booking-question-box" id="booking-question-box_${index}">
+              ${activityBooking.questions
+                  .map((question) => {
+                    let inputType = "text"; // Default to text
+                    if (question.dataType === "DATE") inputType = "date";
+                    if (question.dataType === "NUMBER") inputType = "number";
+                    return `
+                    <div class="custom-checkout-participant-inputs">
+                      <div class="custom-checkout-form-group">
+                        <label for="${question.questionId}_${index}">
+                          ${question.label} ${question.required ? "<span>*</span>" : ""}
+                      </label>
+                      <span class="custom-question-help">${question.help}</span>
+                        <input type="${inputType}" 
+                          id="${question.questionId}_${index}" 
+                          data-question-id="${question.questionId}" 
+                          class="activity-question-input"
+                          ${question.required ? "required" : ""}
+                          placeholder="${question.placeholder || ''}"
+                        />
+                      </div>
+                    </div>`;
+                  })
+                  .join("")}
+              </div>
+              ` : ""
+              }
+                ${activityBooking &&
+                activityBooking.passengers.some(
+                  (passenger) => passenger.passengerDetails.length > 0
+                )
+                ? `
+              ${activityBooking.passengers
+                  .map(
+                    (passenger, passengerIndex) => `
+
+                    <div class="custom-checkout-participant-inputs">
+                     <h3>Traveller ${passengerIndex + 1} (${passenger.pricingCategoryTitle
+                      })</h3>
+                          <div class="custom-form-child-section">
+                      ${passenger.passengerDetails
+                        .map((detail) => {
+                          // Determine input type based on dataType
+                          let inputType = "text"; // Default to "text"
+                          if (detail.dataType === "DATE") inputType = "date";
+                          if (detail.dataType === "NUMBER") inputType = "number";
+
+                          return `
+                          <div class="custom-checkout-form-group">
+                            <label for="${detail.questionId}_${index}_${passengerIndex}">
+                              ${detail.label} ${detail.required ? "<span>*</span>" : ""}
+                            </label>
+                            <input type="${inputType}" 
+                              id="${detail.questionId}_${index}_${passengerIndex}" 
+                              data-question-id="${detail.questionId}" 
+                              data-pricing-category-id="${passenger.pricingCategoryId}" 
+                              data-booking-id="${passenger.bookingId}" 
+                              class="passenger-input"
+                              ${detail.required ? "required" : ""}
+                              ${inputType === "date" ? 'placeholder="YYYY-MM-DD"' : ""}
+                            />
+                          </div>`;
+                        })
+                        .join("")}
+                        </div>
+                      </div>
+                    `
+                  )
+                  .join("")}`
+                : ""
+              }
+               </div>
+           </div>`
+              : ""
+            }
+                  
+          <div class="custom-checkout-continue-btn">
+              <button id="continueToStep${index + 3}">Continue</button>
+          </div>
+      </div>
+      </div>
+   `;
+        })
+        .join("")}
+      <!-- Refund Terms -->
+    
+      <div class="custom-checkout-step" data-step="${checkoutExperience.length + 2
+      }" style="display: none;">
+       <h2 class="custom-checkout-step-3-section-title">Cancellation policy</h2>
+         <div class="custom-checkout-step-3-divider"></div>
+         
+         <div class="custom-checkout-step-3-refund-box">
+             <label class="custom-checkout-step-3-refund-option">
+                 <input type="radio" name="refundOption" id="basicRefund" checked>
+                  <span class="custom-checkout-step-3-refund-header">
+                      <span class="custom-checkout-step-3-refund-title">Basic refund terms</span>
+                      <span class="custom-checkout-step-3-refund-price">Included in price</span>
+                 </span>
+             </label>
+             <div class="custom-checkout-step-3-refund-details">
+             ${checkoutExperience.map(experience => `
+              <h4>${experience.product.title ?? ""}</h4>
+              <p><strong>Cancellation policy</strong></p>
+              <ul>
+                  <li>Fully refundable until ${experience.dates ?? ""}</li>
+                  <li>Non-refundable after ${experience.dates ?? ""}</li>
+              </ul>
+          `).join("")}
+          
+             </div>
+         </div>
+         <div class="custom-checkout-step-3-continue-btn">
+              <button id="continueToStep${checkoutExperience.length + 3
+      }">Continue</button>
+         </div>
+      </div>
+      <!-- Final Review and Confirm -->
+      <div class="custom-checkout-step" data-step="${checkoutExperience.length + 3
+      }" style="display: none;">
+        <h2 class="custom-checkout-step-4-title">You're booking</h2>
+        <div class="custom-checkout-step-4-divider"></div>
+        ${checkoutExperience
+        .map(
+          (experience) => `
+          <div class="custom-checkout-step-4-booking-summary">
+            <div class="custom-checkout-step-4-booking-card">
+              <img src="${experience.product.keyPhoto.originalUrl}" alt="${experience.product.title
+            }" class="custom-checkout-step-4-image">
+              <div class="custom-checkout-step-4-details">
+                <h3>${experience.product.title}</h3>
+                <div class="custom-checkout-step-4-info">
+                  <p><strong>Travellers:</strong> ${experience.lineItems[0].people ?? "not found"
+            }</p>
+                  <p><strong>Departure:</strong> ${experience.lineItems[0].totalAsText ?? "not found"
+            }</p>
+                  <p><strong>Duration:</strong> 8 hours</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+        )
+        .join("")}
+        <div class="custom-checkout-promo-code" id="HidePromoCode">
+           <label for="promo">Promo Code</label>
+           <div class="custom-checkout-promo-input">
+               <input type="text" id="promo" placeholder="Enter code">
+               <button id="apply-promo" disabled>Apply</button>
+           </div>
+           <div class="promo-code-error"></div>
+        </div>
+        <h2 class="custom-checkout-step-4-title">Confirm</h2>
+        <div class="custom-checkout-step-4-divider"></div>
+        <div class="custom-checkout-step-4-confirmation">
+          <label class="custom-checkout-step-4-checkbox">
+            <input type="checkbox" id="termsCheckbox">
+            I accept the <a href="#" class="custom-checkout-step-4-link">terms and conditions</a>
+          </label>
+          <label class="custom-checkout-step-4-checkbox">
+            <input type="checkbox" id="privacyCheckbox">
+            I have read and consent to the <a href="#" class="custom-checkout-step-4-link">privacy policy</a>
+          </label>
+        </div>
+        <div class="custom-checkout-step-4-button-container">
+          <button id="confirmButton" class="custom-checkout-step-4-button" disabled>
+          </button>
+        </div>
+      </div>
+    `;
+    tabsContent.html(tabPage);
+
+    checkoutModalRightSection(checkoutOptionsResponse, cartResponse);
+
+    const cancellationPolicyContentDiv = $("#cancellationPolicyDiv");
+    const cancellationPolicyContent = checkoutExperience
+      .map(
+        (experience, index) => `
+        <h3>${experience.product.title ?? ""}</h3>
+        <p><strong>${experience.dates}</strong></p>
+        <div style="display: flex; align-items: center; margin-top: 10px;">
+            <img src="<?php echo plugin_dir_url(__FILE__) . 'bokun_images/refund.svg'; ?>" 
+                alt="Icon" style="width: 20px; height: 20px; margin-right: 8px;" />
+            <span><strong>Cancellation policy</strong></span>
+        </div>
+        <ul style="margin-top: 5px; padding-left: 25px;">
+            <li>Fully refundable until ${experience.dates}</li>
+            <li>Non-refundable after ${experience.dates}</li>
+        </ul>
+    `
+      )
+      .join("");
+    cancellationPolicyContentDiv.html(cancellationPolicyContent);
+    if (checkoutOptionsResponse.data.questions.mainContactDetails) {
+      const form = $("#contactForm");
+      form.innerHTML = "";
+      function createFormFields(questions) {
+        questions.forEach((question) => {
+          const formGroup = document.createElement("div");
+          formGroup.className = "custom-checkout-form-group";
+          if (question.dataType !== "CHECKBOX_TOGGLE") {
+            const label = document.createElement("label");
+            label.setAttribute("for", question.questionId);
+            label.textContent =
+              question.label + (question.required ? " *" : "");
+            formGroup.appendChild(label);
+          }
+          if (question.selectFromOptions) {
+            // Create a select dropdown
+            const select = document.createElement("select");
+            select.id = question.questionId;
+            select.required = question.required;
+            select.setAttribute("data-question-id", question.questionId);
+            const defaultOption = document.createElement("option");
+            defaultOption.value = "";
+            defaultOption.textContent = `Select ${question.label}`;
+            select.appendChild(defaultOption);
+            question.answerOptions.forEach((option) => {
+              const optionElement = document.createElement("option");
+              optionElement.value = option.value;
+              optionElement.textContent = option.label;
+              select.appendChild(optionElement);
+            });
+            formGroup.appendChild(select);
+          } else if (question.dataType === "SHORT_TEXT") {
+            // Create a text input
+            const input = document.createElement("input");
+            input.type =
+              question.dataFormat === "EMAIL_ADDRESS"
+                ? "email"
+                : question.dataFormat === "PHONE_NUMBER"
+                  ? "tel"
+                  : "text";
+            input.id = question.questionId;
+            input.placeholder = question.label;
+            input.required = question.required;
+            input.setAttribute("data-question-id", question.questionId);
+            if (question.questionId === "phoneNumber") {
+              input.id = "custom-phone-code-picker"; // Custom ID for phone number input
+            }
+            formGroup.appendChild(input);
+          } else if (question.dataType === "DATE") {
+            // Create a date input
+            const input = document.createElement("input");
+            input.type = "date";
+            input.id = question.questionId;
+            input.required = question.required;
+            input.setAttribute("data-question-id", question.questionId);
+            formGroup.appendChild(input);
+          } else if (question.dataType === "CHECKBOX_TOGGLE") {
+            // Create a container for the checkbox and label
+            const checkboxContainer = document.createElement("div");
+            checkboxContainer.className = "checkbox-container"; // Add a class for styling
+            // Create the checkbox input
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.id = question.questionId;
+            checkbox.required = question.required;
+            checkbox.setAttribute("data-question-id", question.questionId);
+            // Create the label for the checkbox
+            const checkboxLabel = document.createElement("label");
+            checkboxLabel.setAttribute("for", question.questionId);
+            checkboxLabel.textContent =
+              question.label + (question.required ? " *" : "");
+            // Append checkbox and label to the container
+            checkboxContainer.appendChild(checkbox);
+            checkboxContainer.appendChild(checkboxLabel);
+            // Append the container to the form group
+            formGroup.appendChild(checkboxContainer);
+          }
+          form.append(formGroup);
+        });
+      }
+      // Generate fields dynamically
+      createFormFields(
+        checkoutOptionsResponse.data.questions.mainContactDetails
+      );
+      const submitButton = document.getElementById("continueButton");
+      var formDataArray = [];
+      var addedQuestions = new Set();
+      submitButton.onclick = function () {
+        const form = document.getElementById("contactForm");
+        if (!form) {
+          console.error("Form element not found!");
+          return;
+        }
+        const inputs = form.querySelectorAll("[data-question-id]");
+        formDataArray = [];
+        addedQuestions.clear();
+        inputs.forEach((input) => {
+          const questionId = input.getAttribute("data-question-id");
+          let value;
+          if (input.id === "custom-phone-code-picker") {
+            if (typeof window.iti !== "undefined") {
+              value = window.iti.getNumber();
+            } else {
+              console.error(
+                "intlTelInput instance 'iti' is not accessible or not initialized."
+              );
+              value = input.value; // Fallback to raw input value
+            }
+          } else if (input.type === "checkbox") {
+            value = input.checked ? "1" : "0";
+          } else if (input.type === "radio") {
+            if (input.checked) {
+              value = input.value;
+            } else {
+              return;
+            }
+          } else {
+            value = input.value;
+          }
+          if (!addedQuestions.has(questionId)) {
+            formDataArray.push({
+              questionId: questionId,
+              values: [value],
+            });
+            addedQuestions.add(questionId);
+          }
+        });
+        console.log("Form Data:", formDataArray); // Debugging: Log the collected form data
+      };
+    } else {
+      console.log("Main contact details do not exist");
+    }
+    const pickupPlaces = pickupPlacesResponse?.data?.pickupPlaces || [];
+    // Function to initialize dropdowns dynamically for each experience
+    function initializeDropdowns(
+      containerId,
+      inputId,
+      placeholder,
+      options,
+      whereInputSelector,
+      optionsId,
+      spanId
+    ) {
+      const $container = $(`#${containerId}`);
+      $container.html(`
+        <input type="text" id="${inputId}" class="custom-form-input" placeholder="${placeholder}" required/>
+        <ul id="${optionsId}" class="custom-dropdown-options">
+          ${options
+          .map(
+            (option) => `
+                <li class="custom-pickup-list" data-id="${option.id}" data-room-status="${option.askForRoomNumber}">${option.title}</li>
+              `
+          )
+          .join("")}
+        </ul>
+        <div id="${inputId}RoomNumberContainer" class="room-number-container" style="display: none;">
+          <label for="${inputId}RoomNumber">Room Number</label>
+          <input type="text" id="${inputId}RoomNumber" class="custom-form-input" placeholder="Enter room number" />
+        </div>
+      `);
+      const $input = $(`#${inputId}`);
+      const $dropdown = $(`#${optionsId}`);
+      const $roomNumberContainer = $(`#${inputId}RoomNumberContainer`);
+      const $whereInput = $(whereInputSelector);
+      const $timeSpan = $(`#${spanId}`);
+      // Show dropdown when input is focused
+      $input.on("focus", function () {
+        $dropdown.addClass("show");
+        showAllOptions();
+      });
+      // Hide dropdown when input loses focus
+      $input.on("blur", function () {
+        setTimeout(() => $dropdown.removeClass("show"), 200);
+      });
+      // Filter dropdown options based on input value
+      $input.on("input", function () {
+        const filter = $(this).val().toLowerCase();
+        $dropdown.find("li").each(function () {
+          const text = $(this).text().toLowerCase();
+          $(this).toggle(text.includes(filter));
+        });
+      });
+      // Handle option selection
+      $dropdown.on("click", ".custom-pickup-list", function () {
+        const $selectedOption = $(this);
+        if ($selectedOption.hasClass("selected")) {
+          // Deselect option
+          $input.val("");
+          $selectedOption.removeClass("selected");
+          showAllOptions();
+          $whereInput.show(); // Show manual input if option deselected
+          $timeSpan.text(""); // Clear the time span
+        } else {
+          // Select option
+          $input.val($selectedOption.text());
+          $dropdown.find("li").removeClass("selected");
+          $selectedOption.addClass("selected");
+          const askForRoom = $selectedOption.data("room-status");
+          $roomNumberContainer.toggle(askForRoom === true);
+          $dropdown.removeClass("show");
+          $whereInput.hide();
+          const dateString = $timeSpan.data("time-id");
+          const convertedTime = convertTo24HourTime(dateString);
+          if (convertedTime) {
+            $timeSpan.text(`Be ready to be picked at ${convertedTime}`);
+          }
+        }
+      });
+
+      function showAllOptions() {
+        $dropdown.find("li").show();
+      }
+
+      // Function to convert time to 24-hour format
+      function convertTo24HourTime(dateString) {
+        if (!dateString) return null;
+        const dateParts = dateString.match(/(\d+):(\d+)\s(AM|PM)/);
+        if (!dateParts) return null;
+
+        let [hours, minutes, period] = [
+          Number(dateParts[1]),
+          Number(dateParts[2]),
+          dateParts[3],
+        ];
+        if (period === "PM" && hours < 12) hours += 12;
+        if (period === "AM" && hours === 12) hours = 0;
+        const totalMinutes = hours * 60 + minutes - 15;
+        if (totalMinutes < 0) {
+          hours = 23;
+          minutes = 45;
+        } else {
+          hours = Math.floor(totalMinutes / 60);
+          minutes = totalMinutes % 60;
+        }
+        return `${String(hours).padStart(
+          2,
+          "0"
+        )}:${String(minutes).padStart(2, "0")}`;
+      }
+    }
+
+    checkoutExperience.forEach((experience, index) => {
+      const activityBooking =
+        checkoutOptionsResponse.data.questions.activityBookings.find(
+          (booking) => booking.activityId === experience.product.id
+        );
+      const parentPickupDropoffDiv = `#custom-checkout-pickup-dropoff_${index}`;
+
+      if (activityBooking) {
+        const { pickupQuestions, dropoffQuestions, passengers = [], questions = [] } = activityBooking;
+
+        const hasPickup = pickupQuestions?.length > 0;
+        const hasDropoff = dropoffQuestions?.length > 0;
+        const hasPassengers = passengers.length > 0;
+
+        // Pickup and Dropoff IDs
+        const pickupDivId = `pickupDiv_${index}`;
+        const dropoffDivId = `dropoffDiv_${index}`;
+        const pickupInputId = `pickupSearch_${index}`;
+        const dropoffInputId = `dropoffSearch_${index}`;
+        const pickupWhereInput = `.customPickupDiv_${index}`;
+        const dropoffWhereInput = `.customDropoffDiv_${index}`;
+        const pickupOptionsId = `pickupOptions_${index}`;
+        const dropoffOptionsId = `dropoffOptions_${index}`;
+        const hasActivityQuestions = questions.length > 0
+        // Initialize pickup and dropoff dropdowns only if required
+        if (hasPickup || hasDropoff) {
+          initializeDropdowns(
+            pickupDivId,
+            pickupInputId,
+            "Specify your pick-up location",
+            pickupPlaces,
+            pickupWhereInput,
+            pickupOptionsId,
+            `pickupAttention_${index}`
+          );
+          initializeDropdowns(
+            dropoffDivId,
+            dropoffInputId,
+            "Specify your drop-off location",
+            pickupPlaces,
+            dropoffWhereInput,
+            dropoffOptionsId
+          );
+        }
+
+        if (!hasPickup && !hasDropoff) {
+          $(parentPickupDropoffDiv).remove();
+          $("#addExpSection").remove();
+        }
+
+        $(`#continueToStep${index + 3}`).on("click", function () {
+          const activityAnswers = hasActivityQuestions
+            ? questions.map((question) => {
+              const inputId = `${question.questionId}_${index}`;
+              const inputValue = $(`#${inputId}`).val()?.trim() || "";
+
+              return inputValue
+                ? {
+                  questionId: question.questionId,
+                  values: [inputValue],
+                }
+                : null;
+            }).filter(Boolean)
+            : undefined;
+
+          const pickupAnswers = hasPickup && $(`#pickupSearch_${index}`).val()?.trim()
+            ? [{
+              questionId: "pickupPlaceDescription",
+              values: [$(`#pickupSearch_${index}`).val().trim()],
+            }]
+            : undefined;
+
+          const dropoffAnswers = hasDropoff && $(`#dropoffSearch_${index}`).val()?.trim()
+            ? [{
+              questionId: "dropoffPlaceDescription",
+              values: [$(`#dropoffSearch_${index}`).val().trim()],
+            }]
+            : undefined;
+
+          const processedPassengers = hasPassengers
+            ? passengers.map((passenger, passengerIndex) => {
+              const passengerDetails = passenger.passengerDetails
+                .map((detail) => {
+                  const inputId = `${detail.questionId}_${index}_${passengerIndex}`;
+                  const inputValue = $(`#${inputId}`).val()?.trim() || "";
+
+                  return inputValue
+                    ? {
+                      questionId: detail.questionId,
+                      values: [inputValue],
+                    }
+                    : null;
+                })
+                .filter(Boolean);
+
+              return {
+                pricingCategoryId: passenger.pricingCategoryId,
+                bookingId: passenger.bookingId,
+                ...(passengerDetails.length > 0 && { passengerDetails }),
+              };
+            })
+            : undefined;
+
+          // Store activity data
+          const activityData = {
+            ...(activityAnswers && { answers: activityAnswers }),
+            ...(pickupAnswers && { pickupAnswers }),
+            ...(dropoffAnswers && { dropoffAnswers }),
+            ...(processedPassengers && { passengers: processedPassengers }),
+          };
+
+          // Unique key for each activity
+          const activityIdIndexKey = `${experience.product.id}_${index}`;
+          activityTabData[activityIdIndexKey] = activityData;
+
+          console.log(
+            `Stored data for activity ${activityIdIndexKey}:`,
+            activityData
+          );
+        });
+      }
+    });
+
+    // Console log all stored activities' data
+    console.log("All activities data:", activityTabData);
+
+    attactCheckoutModalFunction(checkoutExperience);
+    const footerLinks = document.querySelectorAll(
+      ".custom-checkout-footer-link"
+    );
+    const contentContainer = document.getElementById("contentContainer");
+    const contentSections = document.querySelectorAll(".content-section");
+    footerLinks.forEach((link) => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        console.log("footerlinks");
+        const targetId = link.getAttribute("data-target");
+        const targetContent = document.getElementById(targetId);
+        if (targetContent.style.display === "block") {
+          targetContent.style.display = "none";
+          contentContainer.style.display = "none";
+        } else {
+          contentSections.forEach((section) => {
+            section.style.display = "none";
+          });
+          targetContent.style.display = "block";
+          contentContainer.style.display = "block";
+        }
+      });
+    });
+
+    const firstCartActivity = cartResponse.data.activityBookings[0] ?? "";
+    const activityOptionsResponse =
+      checkoutOptionsResponse.data.questions ?? "";
+    // console.log("cart and checkout options response:", firstCartActivity, activityOptionsResponse);
+
+    $("#apply-promo").on("click", function () {
+      console.log("Apply Promo button clicked!");
+      const promoCode = $("#promo").val().trim();
+      console.log(promoCode);
+      if (!promoCode) {
+        alert("Please enter a promo code.");
+        return;
+      }
+      $.ajax({
+        url: bokunAjax.ajaxUrl,
+        type: "POST",
+        data: {
+          action: "submit_promo_code",
+          session_id: getOrCreateSessionId(),
+          promo_code: promoCode,
+          language: localStorage.getItem("language"),
+          currency: localStorage.getItem("currency"),
+        },
+        beforeSend: function () {
+          console.log("Applying promo code...");
+        },
+        success: function (response) {
+          console.log("API Response:", response);
+          const $errorContainer = $(".promo-code-error");
+          if (response.success && response.data.fields.reason !== "NOT_FOUND") {
+            $(".custom-checkout-total-price").text(
+              `AED ${response.data.newTotal}`
+            );
+            $errorContainer.text("").hide();
+          } else {
+            const errorMessage =
+              response.data.fields.reason === "NOT_FOUND"
+                ? "Error: Promo code not found."
+                : response.data.message || "An error occurred.";
+            console.error("Error applying promo code:", errorMessage);
+            $errorContainer.text(errorMessage).show();
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error("AJAX request failed:", error);
+        },
+      });
+    });
+    $(document).on("click", "#confirmButton", async function () {
+      var $button = $(this);
+      $button.prop("disabled", true).html(`
+    
+          <span>Processing...</span>
+      `);
+
+      try {
+        await submitCheckout(
+          activityOptionsResponse,
+          formDataArray,
+          checkoutExperience,
+          activityTabData
+        );
+      } catch (error) {
+        console.error("Checkout failed:", error);
+        $button.prop("disabled", false).html(`Reserve and Pay Now ${checkoutOptionsResponse.data.options[0].formattedAmount}`);
+      }
+    });
+
+
+  }
+  async function submitCheckout(
+    activityOptionsResponse,
+    formDataArray,
+    checkoutExperience,
+    activityTabData
+  ) {
+    console.log("Activity tab data from submit checkout:", activityTabData);
+
+    const activityBookings = checkoutExperience.map((experience, index) => {
+      const activityId = experience.product.id;
+      const bookingId = experience.productBookingId;
+      const activityKey = `${activityId}_${index}`;
+      const activityData = activityTabData[activityKey] || {};
+
+      // Extract data from activityTabData
+      const pickupAnswers = activityData.pickupAnswers || [];
+      const dropoffAnswers = activityData.dropoffAnswers || [];
+      const passengers = activityData.passengers || [];
+      const answers = activityData.answers || [];
+      return {
+        activityId,
+        bookingId,
+        ...(pickupAnswers.length > 0 && { pickupAnswers }),
+        ...(dropoffAnswers.length > 0 && { dropoffAnswers }),
+        ...(passengers.length > 0 && { passengers }),
+        ...(answers.length > 0 && { answers }),
+      };
+    });
+
+    // Create the shopping cart
+    const shoppingCart = {
+      uuid: getOrCreateSessionId(),
+      bookingAnswers: {
+        mainContactDetails: formDataArray,
+        activityBookings: activityBookings.filter(
+          (booking) =>
+            booking.pickupAnswers ||
+            booking.dropoffAnswers ||
+            booking.passengers
+        ),
+      },
+    };
+
+    console.log("Final Shopping Cart:", shoppingCart);
+
+    $.ajax({
+      url: bokunAjax.ajaxUrl,
+      method: "POST",
+      data: {
+        action: "bokun_checkout_submit",
+        shoppingCart: shoppingCart,
+        language: localStorage.getItem("language"),
+        currency: localStorage.getItem("currency"),
+      },
+
+      beforeSend: () => {
+        console.log("Submitting checkout...");
+      },
+      success: (response) => {
+        console.log("Checkout Success:", response);
+        if (response.data?.redirect_url) {
+          window.location.href = response.data.redirect_url;
+          console.log("Redirecting to:", response.data.redirect_url);
+        } else {
+          console.error("Redirect URL not found in response:", response);
+        }
+      },
+      error: (error) => {
+        console.error("AJAX request failed:", error);
+        alert("An error occurred during checkout.");
+      },
+      complete: () => {
+        console.log("Checkout process completed.");
+      },
+    });
+  }
+});

@@ -1,0 +1,1237 @@
+/* Modal Overlay */
+.custom-checkout-modal-content * {
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    font-family: Arial, sans-serif !important;
+}
+.custom-checkout-modal-overlay {
+    display: flex;
+    justify-content: center !important;
+    align-items: center !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    z-index: 999 !important;
+}
+/* Modal Content */
+.custom-checkout-modal-content {
+    background: #fff !important;
+    width: 98% !important;
+    max-width: 1200px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+    padding: 40px 50px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    max-height: 99vh;
+    overflow-y: auto;
+}
+.custom-checkout-modal-content::-webkit-scrollbar {
+    width: 15px;
+    /* Width of vertical scrollbar */
+}
+.custom-checkout-modal-content::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+    /* Rounds the track at the top and bottom */
+}
+.custom-checkout-modal-content::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+    /* Gives the scrollbar thumb rounded ends */
+    border: 3px solid #fff;
+    /* Adds some padding to create a circular effect */
+}
+.custom-checkout-modal-content::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+    /* Darker when hovering */
+}
+/* Header Controls */
+.custom-checkout-header-controls {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 16px 0 !important;
+}
+.custom-checkout-back-arrow {
+    display: inline-block !important;
+    width: 8px !important;
+    height: 8px !important;
+    border-left: 2px solid #007bff !important;
+    border-bottom: 2px solid #007bff !important;
+    transform: rotate(45deg) !important;
+    margin-right: 8px !important;
+    /* Space between arrow and text */
+}
+.custom-checkout-header-controls .custom-checkout-back-button {
+    color: #000000 !important;
+    text-decoration: none !important;
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+}
+.custom-checkout-header-controls .custom-checkout-dropdown-container {
+    display: flex !important;
+    gap: 20px !important;
+    margin: 10px 20px !important;
+}
+.custom-checkout-header-controls .custom-checkout-currency-dropdown {
+    padding: 6px 30px !important;
+    font-size: 1rem !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    background-color: #fff !important;
+    cursor: pointer !important;
+}
+.custom-checkout-close-btn {
+    font-size: 30px !important;
+    font-weight: bold !important;
+    color: #6B7280 !important;
+    border-radius: 5px !important;
+    justify-content: center !important;
+    display: flex !important;
+    background-color: #F1F5F9 !important;
+    padding: 20px !important;
+    border: 1px solid #ddd !important;
+    width: 35px !important;
+    height: 35px !important;
+    align-items: center !important;
+}
+.custom-checkout-close-btn:hover {
+    background-color: #ddd !important;
+}
+/* Header and Progress Bar */
+#checkoutHeader {
+    display: flex !important;
+}
+.custom-checkout-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 24px !important;
+}
+.custom-checkout-logo {
+    height: 55px !important;
+    width: 10% !important;
+}
+.custom-checkout-progress-bar {
+    width: 90% !important;
+    display: flex !important;
+    align-items: center !important;
+}
+.custom-checkout-progress-step-container {
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    position: relative !important;
+}
+.custom-checkout-progress-step {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+.custom-checkout-progress-step-container .custom-checkout-progress-step:first-child {
+    align-items: flex-start !important;
+    text-align: left !important;
+}
+.custom-checkout-progress-step-container .custom-checkout-progress-step:last-child {
+    align-items: flex-end !important;
+    text-align: right !important;
+}
+.step-count {
+    background-color: #6bca6e !important;
+    height: 30px !important;
+    width: 30px !important;
+    border-radius: 50% !important;
+    color: white !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    font-size: 14px !important;
+    border: 3px solid white !important;
+}
+.step-description {
+    margin-top: 8px !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    max-width: 200px !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+    word-break: break-word !important;
+}
+.custom-checkout-progress-line {
+    flex-grow: 1 !important;
+    height: 2px !important;
+    background-color: #55da41 !important;
+    margin-top: 15px !important;
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+}
+.custom-checkout-active .step-count {
+    background-color: #007bff !important;
+}
+.custom-checkout-active+.custom-checkout-progress-line {
+    background-color: #dad6ce !important;
+}
+.custom-checkout-active~.custom-checkout-progress-step .step-count {
+    background-color: #dad6ce !important;
+}
+.custom-checkout-active~.custom-checkout-progress-line {
+    background-color: #dad6ce !important;
+}
+@media (max-width: 768px) {
+    .step-description {
+        font-size: 0.8rem !important;
+        max-width: 140px !important;
+    }
+}
+/* Scrollable Main Container */
+.custom-checkout-main-container {
+    display: flex !important;
+    gap: 40px !important;
+    position: relative !important;
+}
+.custom-checkout-step {
+    transition: opacity 0.5s ease-in-out !important;
+}
+.custom-checkout-left-section {
+    flex: 2 !important;
+    overflow-y: auto !important;
+    padding-right: 10px !important;
+    /* scroll-behavior: smooth !important; */
+    scrollbar-width: none !important;
+}
+/* Booking Summary */
+.custom-checkout-booking-summary {
+    margin-bottom: 20px !important;
+}
+.custom-checkout-booking-card {
+    display: flex !important;
+    align-items: center !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    background-color: #fff !important;
+    padding: 15px !important;
+    gap: 15px !important;
+}
+.custom-checkout-booking-image {
+    width: 80px !important;
+    height: 80px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+}
+.custom-checkout-booking-details {
+    flex: 1 !important;
+}
+.custom-checkout-booking-title {
+    font-size: 1rem !important;
+    font-weight: bold !important;
+    margin-bottom: 10px !important;
+    color: #333 !important;
+}
+.custom-checkout-booking-info {
+    display: flex !important;
+    justify-content: space-between !important;
+    font-size: 0.9rem !important;
+    color: #555 !important;
+}
+.custom-checkout-booking-info p {
+    margin: 0 !important;
+    text-align: center !important;
+}
+.custom-checkout-booking-info strong {
+    color: #333 !important;
+    font-weight: 600 !important;
+}
+.custom-checkout-section-title {
+    font-size: 1.4rem !important;
+    font-weight: bold !important;
+    margin: 20px 0 10px !important;
+    color: #333 !important;
+}
+.custom-checkout-experience-box {
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    padding: 20px !important;
+    margin: 15px 0 !important;
+    background-color: #fff !important;
+}
+.custom-checkout-experience-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+    margin-bottom: 10px !important;
+}
+.custom-checkout-experience-img {
+    width: 65px !important;
+    height: 65px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+}
+.custom-checkout-experience-details h3 {
+    font-size: 1rem !important;
+    margin: 0 !important;
+    color: #333 !important;
+    font-weight: bold !important;
+}
+.custom-checkout-experience-details span {
+    font-size: 0.9rem !important;
+    color: #666 !important;
+}
+.custom-checkout-checkbox-container {
+    display: flex !important;
+    align-items: center !important;
+    margin: 10px 0 !important;
+    gap: 10px !important;
+}
+.custom-checkout-checkbox-label {
+    font-size: 0.9rem !important;
+    color: #555 !important;
+}
+.custom-checkout-experience-box p{
+    font-size: 14px !important;
+    margin: 10px 0 0 0 !important;
+}
+.custom-checkout-experience-description {
+    font-size: 0.85rem !important;
+    color: #666 !important;
+    margin-top: 5px !important;
+}
+.custom-checkout-participant-box {
+    border: 1px solid #ddd !important;
+    padding: 20px !important;
+    border-radius: 8px !important;
+    background-color: #fff !important;
+    margin: 20px 0 !important;
+}
+.custom-checkout-participant-inputs {
+    /* display: flex !important;
+    gap: 20px !important; */
+    padding: 10px 0px !important;
+}
+.custom-checkout-participant-inputs .custom-checkout-form-group {
+    flex: 1 !important;
+}
+.custom-checkout-participant-inputs label {
+    display: block !important;
+    margin-bottom: 5px !important;
+    font-size: 0.9rem !important;
+    color: #333 !important;
+}
+.custom-checkout-participant-inputs input {
+    width: 100% !important;
+    padding: 10px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    font-size: 1rem !important;
+}
+.custom-checkout-continue-btn {
+    text-align: right !important;
+    margin-top: 20px !important;
+}
+.custom-checkout-continue-btn button {
+    background-color: #007bff !important;
+    color: white !important;
+    border: none !important;
+    padding: 12px 35px !important;
+    border-radius: 4px !important;
+    font-size: 1.1rem !important;
+    cursor: pointer !important;
+}
+.custom-checkout-continue-btn button:hover {
+    background-color: #0056b3 !important;
+}
+/* Step 3: Section Title */
+.custom-checkout-step-3-section-title {
+    font-size: 1.4rem !important;
+    font-weight: bold !important;
+    color: #333 !important;
+    margin-bottom: 10px !important;
+}
+.custom-checkout-step-3-divider {
+    width: 100px !important;
+    height: 4px !important;
+    background-color: #007bff !important;
+    border-radius: 2px !important;
+    margin: 10px 0 20px !important;
+}
+/* Step 3: Refund Box */
+.custom-checkout-step-3-refund-box {
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    background-color: #fff !important;
+    margin: 15px 0 !important;
+    padding: 15px !important;
+    cursor: pointer !important;
+    transition: box-shadow 0.3s ease !important;
+}
+.custom-checkout-step-3-refund-box:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+}
+.custom-checkout-step-3-refund-option {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    font-size: 1rem !important;
+    font-weight: bold !important;
+    color: #333 !important;
+}
+.custom-checkout-step-3-refund-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 10px !important;
+}
+.custom-checkout-step-3-refund-title {
+    color: #333 !important;
+}
+.custom-checkout-step-3-refund-price {
+    color: #555 !important;
+    font-weight: 400 !important;
+}
+.custom-checkout-step-3-refund-details {
+    margin-top: 15px !important;
+    font-size: 0.9rem !important;
+    color: #555 !important;
+}
+.custom-checkout-step-3-refund-details ul {
+    margin: 10px 0 !important;
+    padding-left: 20px !important;
+}
+.custom-checkout-step-3-refund-details li {
+    margin-bottom: 5px !important;
+}
+.custom-checkout-step-3-terms-link {
+    color: #007bff !important;
+    text-decoration: none !important;
+}
+.custom-checkout-step-3-terms-link:hover {
+    text-decoration: underline !important;
+}
+.custom-checkout-step-3-powered-by {
+    margin-top: 10px !important;
+    font-size: 0.8rem !important;
+    color: #777 !important;
+}
+/* Step 3: Radio Button Customization */
+.custom-checkout-step-3-refund-option input[type="radio"] {
+    margin-right: 10px !important;
+    transform: scale(1.2) !important;
+    cursor: pointer !important;
+}
+/* Style the list container */
+.custom-checkout-step-3-refund-details ul {
+    list-style: none !important;
+    padding: 0 !important;
+}
+.custom-checkout-step-3-refund-details li {
+    position: relative !important;
+    padding-left: 35px !important;
+    /* Space for the checkmark */
+    margin-bottom: 10px !important;
+    font-size: 0.9rem !important;
+    color: #333 !important;
+}
+/* Add custom rounded checkmark before each list item */
+.custom-checkout-step-3-refund-details li::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 60% !important;
+    transform: translateY(-50%) !important;
+    width: 20px !important;
+    height: 20px !important;
+    background-color: #e6f8ea !important;
+    /* Light green background */
+    border-radius: 50% !important;
+    /* border: 2px solid #28a745 !important ; */
+    /* Green border */
+}
+.custom-checkout-step-3-refund-details li::after {
+    content: '' !important;
+    position: absolute !important;
+    left: 6px !important;
+    /* Position inside the circle */
+    top: 50% !important;
+    transform: translateY(-50%) rotate(45deg) !important;
+    width: 6px !important;
+    height: 12px !important;
+    border: solid #28a745 !important;
+    /* Green checkmark */
+    border-width: 0 2px 2px 0 !important;
+    background-color: transparent !important;
+}
+/* Step 3: Continue Button */
+.custom-checkout-step-3-continue-btn {
+    text-align: right !important;
+    margin-top: 20px !important;
+}
+.custom-checkout-step-3-continue-btn button {
+    background-color: #007bff !important;
+    color: white !important;
+    border: none !important;
+    padding: 12px 35px !important;
+    border-radius: 4px !important;
+    font-size: 1.1rem !important;
+    cursor: pointer !important;
+}
+.custom-checkout-step-3-continue-btn button:hover {
+    background-color: #0056b3 !important;
+}
+/* Step 4: General Title and Divider */
+.custom-checkout-step-4-title {
+    font-size: 1.4rem !important;
+    font-weight: bold !important;
+    color: #333 !important;
+    margin-bottom: 10px !important;
+}
+.custom-checkout-step-4-divider {
+    width: 100px !important;
+    height: 4px !important;
+    background-color: #007bff !important;
+    border-radius: 2px !important;
+    margin: 10px 0 20px !important;
+}
+/* Booking Summary */
+.custom-checkout-step-4-booking-card {
+    display: flex !important;
+    align-items: center !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    background-color: #fff !important;
+    padding: 15px !important;
+    gap: 15px !important;
+}
+.custom-checkout-step-4-image {
+    width: 80px !important;
+    height: 80px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+}
+.custom-checkout-step-4-details h3 {
+    font-size: 1rem !important;
+    font-weight: bold !important;
+    margin-bottom: 10px !important;
+}
+.custom-checkout-step-4-info p {
+    font-size: 0.9rem !important;
+    color: #555 !important;
+    margin: 5px 0 !important;
+}
+/* Confirmation Checkboxes */
+.custom-checkout-step-4-confirmation {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin-bottom: 20px !important;
+}
+.custom-checkout-step-4-checkbox {
+    display: flex !important;
+    align-items: center !important;
+    font-size: 1rem !important;
+    color: #333 !important;
+    gap: 10px !important;
+}
+.custom-checkout-step-4-checkbox input {
+    width: 20px !important;
+    height: 20px !important;
+    cursor: pointer !important;
+}
+.custom-checkout-step-4-link {
+    color: #007bff !important;
+    text-decoration: none !important;
+}
+.custom-checkout-step-4-link:hover {
+    text-decoration: underline !important;
+}
+/* Confirm Button */
+.custom-checkout-step-4-button-container {
+    text-align: center !important;
+    margin-top: 20px !important;
+}
+.custom-checkout-step-4-button {
+    width: 100% !important;
+    background-color: #ccc !important;
+    color: #666 !important;
+    border: none !important;
+    padding: 12px !important;
+    border-radius: 4px !important;
+    font-size: 1.1rem !important;
+    cursor: not-allowed !important;
+}
+.custom-checkout-step-4-button.custom-checkout-active {
+    background-color: #007bff !important;
+    color: #fff !important;
+    cursor: pointer !important;
+}
+.custom-checkout-step-4-button.custom-checkout-active:hover {
+    background-color: #0056b3 !important;
+}
+.custom-checkout-input-error {
+    border: 2px solid red !important;
+    outline: none !important;
+}
+.custom-checkout-input-error:focus {
+    border-color: darkred !important;
+}
+.custom-checkout-right-section {
+    flex: 1 !important;
+    position: sticky !important;
+    top: 10px !important;
+    align-self: flex-start !important;
+}
+/* Contact Section */
+.custom-checkout-contact-section h2 {
+    font-size: 1.5rem !important;
+    font-weight: bold !important;
+    color: #333 !important;
+}
+.custom-checkout-divider {
+    width: 42px !important;
+    height: 6px !important;
+    margin-top: 8px !important;
+    margin-bottom: 20px !important;
+    background: rgb(29, 87, 199) !important;
+    border-radius: 13px !important;
+}
+.custom-checkout-contact-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 20px 30px !important;
+    padding: 20px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 5px !important;
+    background-color: #fff !important;
+    margin-top: 20px !important;
+}
+.custom-checkout-form-group label {
+    font-size: 0.9rem !important;
+    color: rgb(87, 100, 111);
+    margin-bottom: 8px !important;
+    display: block !important;
+}
+.custom-checkout-form-group input,
+.custom-checkout-form-group select {
+    padding: 12px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    width: 100% !important;
+    font-size: 0.8rem !important;
+}
+.custom-checkout-phone-input {
+    display: flex !important;
+    align-items: center !important;
+}
+.custom-checkout-phone-icon {
+    padding: 11px !important;
+    background: #f4f4f4 !important;
+    border: 1px solid #ddd !important;
+    /* border-right: none !important ; */
+    border-radius: 4px 0 0 4px !important;
+}
+.custom-checkout-phone-input input {
+    flex: 1 !important;
+    border-left: none !important;
+    border-radius: 0 4px 4px 0 !important;
+}
+.custom-checkout-email-news {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-top: 10px !important;
+}
+.custom-checkout-email-news input {
+    width: auto !important;
+}
+/* Promo Box */
+.custom-checkout-promo-box {
+    border: 1px solid #ddd !important;
+    padding: 20px !important;
+    border-radius: 8px !important;
+    background-color: #fff !important;
+    font-family: Arial, sans-serif !important;
+}
+/* Promo Header */
+.custom-checkout-promo-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 5px !important;
+}
+.custom-checkout-promo-header h3 {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    color: #5e5e5e !important;
+    flex: 1 !important;
+}
+.custom-checkout-promo-price {
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    color: #5e5e5e !important;
+    margin-left: 10px !important;
+}
+.custom-checkout-promo-code {
+    margin: 10px 0px !important;
+}
+.custom-checkout-close-icon {
+    background: none !important;
+    border: none !important;
+    font-size: 1.2rem !important;
+    color: #999 !important;
+    cursor: pointer !important;
+}
+.custom-checkout-close-icon:hover {
+    color: #555 !important;
+}
+/* Promo Date */
+.custom-checkout-promo-date {
+    font-size: 0.7rem !important;
+    color: #666 !important;
+    margin-bottom: 10px !important;
+}
+.custom-checkout-promo-showmore {
+    color: #007bff !important;
+    text-decoration: none !important;
+    font-size: 0.9rem !important;
+    margin-bottom: 10px !important;
+    display: inline-block !important;
+}
+.custom-checkout-promo-showmore:hover {
+    text-decoration: underline !important;
+}
+/* Promo Input */
+.custom-checkout-promo-input {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+.custom-checkout-promo-input input {
+    flex: 1 !important;
+    padding: 10px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    font-size: 0.9rem !important;
+}
+.custom-checkout-promo-input button {
+    padding: 10px 15px !important;
+    background-color: #e0e0e0 !important;
+    color: #999 !important;
+    border: none !important;
+    border-radius: 4px !important;
+    cursor: not-allowed !important;
+    font-size: 1rem !important;
+}
+.custom-checkout-promo-input button:enabled {
+    background-color: #007bff !important;
+    color: #fff !important;
+    cursor: pointer !important;
+}
+.custom-checkout-promo-input button:enabled:hover {
+    background-color: #0056b3 !important;
+}
+/* Promo Total */
+.custom-checkout-promo-total p {
+    display: flex !important;
+    justify-content: space-between !important;
+    font-size: 0.9rem !important;
+    margin: 10px 0 !important;
+    color: #333 !important;
+}
+.custom-checkout-promo-total span {
+    font-weight: bold !important;
+}
+.custom-checkout-total-price {
+    font-size: 1.1rem !important;
+    color: #333 !important;
+    font-weight: bold !important;
+}
+/* Continue Button */
+.custom-checkout-continue-btn {
+    text-align: right !important;
+    margin: 30px 0 !important;
+}
+.custom-checkout-continue-btn button {
+    background-color: #007bff !important;
+    color: white !important;
+    border: none !important;
+    padding: 12px 35px !important;
+    border-radius: 4px !important;
+    font-size: 1.1rem !important;
+    cursor: pointer !important;
+}
+.custom-checkout-continue-btn button:hover {
+    background-color: #0056b3 !important;
+}
+/* Footer */
+.custom-checkout-custom-footer {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 40px !important;
+    border-top: 1px solid #ddd !important;
+    font-size: 14px !important;
+    background-color: #fff !important;
+}
+.custom-checkout-footer-powered {
+    display: flex !important;
+}
+.custom-checkout-footer-links a {
+    color: #007bff !important;
+    text-decoration: none !important;
+    margin-right: 20px !important;
+}
+.custom-checkout-footer-links a:hover {
+    text-decoration: underline !important;
+}
+.custom-checkout-footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+}
+.custom-checkout-footer-link {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    font-size: 1rem;
+}
+.custom-checkout-footer-link:hover {
+    text-decoration: underline;
+}
+.custom-checkout-footer-powered img {
+    height: 30px !important;
+    object-fit: contain !important;
+}
+.custom-checkout-pickup-dropoff {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 20px !important;
+    margin-bottom: 20px !important;
+}
+.custom-pickup-section,
+.custom-dropoff-section {
+    flex: 1 !important;
+    background: #fff !important;
+    padding: 20px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+.custom-pickup-title,
+.custom-dropoff-title {
+    font-size: 1.2em !important;
+    font-weight: bold !important;
+    color: #333 !important;
+    margin-bottom: 10px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+.custom-included-label {
+    font-size: 0.9em !important;
+    color: #6C757D !important;
+    background: #E9ECEF !important;
+    padding: 3px 8px !important;
+    border-radius: 5px !important;
+}
+.custom-form-group {
+    margin-bottom: 20px !important;
+    position: relative !important;
+}
+.custom-form-label {
+    display: block !important;
+    margin-bottom: 8px !important;
+    font-weight: bold !important;
+    font-size: 1em !important;
+    color: #333 !important;
+}
+.custom-dropdown-wrapper {
+    position: relative !important;
+}
+.custom-form-input {
+    width: 100% !important;
+    padding: 10px !important;
+    font-size: 0.9rem !important;
+    border: 1px solid #ccc !important;
+    border-radius: 5px !important;
+    font-family: inherit !important;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+.custom-form-input:focus {
+    border-color: #007BFF !important;
+    outline: none !important;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5) !important;
+}
+.custom-dropdown-options {
+    position: absolute !important;
+    top: calc(100% + 5px) !important;
+    left: 0 !important;
+    width: 100% !important;
+    background-color: white !important;
+    border: 1px solid #ddd !important;
+    border-radius: 5px !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+    max-height: 180px !important;
+    overflow-y: auto !important;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    z-index: 1000 !important;
+    display: none !important;
+    /* Hidden by default */
+}
+.custom-dropdown-options.show {
+    display: block !important;
+}
+.custom-dropdown-options li {
+    padding: 10px !important;
+    font-size: 0.9rem !important;
+    color: #333 !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease !important;
+}
+.custom-dropdown-options li:hover {
+    background-color: #F8F9FA !important;
+}
+/* Add arrow styles for dropdown */
+.custom-form-input::-webkit-input-placeholder {
+    font-style: italic !important;
+    color: #888 !important;
+}
+.custom-dropdown-wrapper::after {
+    content: '▼' !important;
+    position: absolute !important;
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    pointer-events: none !important;
+    color: #6C757D !important;
+    font-size: 0.8em !important;
+}
+/* Style the secondary input fields */
+.custom-form-input-secondary {
+    width: 100% !important;
+    padding: 10px !important;
+    font-size: 0.9rem !important;
+    border: 1px solid #ccc !important;
+    border-radius: 5px !important;
+    margin-top: 10px !important;
+}
+.custom-form-input-secondary:focus {
+    border-color: #007BFF !important;
+    outline: none !important;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5) !important;
+}
+.custom-footer-content {
+    margin-top: 20px !important;
+    padding: 20px !important;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2), 0 2px 3px 0 rgba(0, 0, 0, 0.19) !important;
+    border: 1px solid #ddd !important;
+    border-radius: 5px !important;
+    font-size: 0.9rem !important;
+    line-height: 1.6 !important;
+}
+.custom-footer-content h2 {
+    font-size: 1.5rem !important;
+    margin-bottom: 10px !important;
+    font-weight: bold !important;
+}
+.custom-footer-content h3 {
+    font-size: 1.2rem !important;
+    margin-bottom: 10px !important;
+    color: #333 !important;
+}
+.custom-footer-content h4 {
+    font-size: 1rem !important;
+    margin-top: 15px !important;
+    font-weight: bold !important;
+}
+.custom-footer-content ul {
+    list-style-type: disc !important;
+    margin-left: 40px !important;
+    padding: 0px 10px !important;
+}
+.custom-footer-content ul ul {
+    list-style-type: circle !important;
+    margin-left: 20px !important;
+}
+.custom-footer-content li {
+    margin-bottom: 10px !important;
+}
+.custom-footer-content p {
+    margin-bottom: 15px !important;
+    color: #555 !important;
+}
+.checkbox-container {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin: 8px 0 !important;
+}
+.checkbox-container input[type="checkbox"] {
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+.checkbox-container label {
+    font-size: 14px !important;
+    color: #333 !important;
+    cursor: pointer !important;
+}
+.custom-checkout-expanded-content {
+    display: none !important;
+    margin-top: 16px !important;
+    padding: 8px 0 !important;
+    border-bottom: 1px solid #ddd !important;
+}
+.custom-checkout-expanded-content.visible {
+    display: block !important;
+}
+.custom-checkout-info-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-bottom: 8px !important;
+    font-size: 0.95rem !important;
+}
+.custom-checkout-info-row span {
+    color: #333 !important;
+}
+.info-price {
+    font-weight: bold !important;
+}
+.custom-checkout-promo-showmore {
+    display: block !important;
+    margin-top: 8px !important;
+    color: #007BFF !important;
+    text-decoration: underline !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+}
+.custom-checkout-promo-showmore:hover {
+    color: #0056B3 !important;
+}
+.custom-checkout-promo-showmore.expanded::after {
+    content: "Show less" !important;
+}
+/* circle steps starts here */
+#circlebar {
+    display: none !important;
+}
+#circlebar {
+    justify-content: flex-end !important;
+}
+.custom-checkout-progress-circle {
+    width: 80px !important;
+    height: 80px !important;
+    border-radius: 50% !important;
+    background-color: #f0f0f0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    position: relative !important;
+}
+.progress-circle-content {
+    background-color: white !important;
+    border-radius: 50% !important;
+    width: 60% !important;
+    height: 60% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 1;
+}
+#progressStepText {
+    font-size: 16px !important;
+    font-weight: bold !important;
+    color: #333 !important;
+}
+.circular-progress-fill {
+    content: "";
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+    position: absolute !important;
+    background: conic-gradient(#007bff 0%,
+            #007bff var(--progress-degree, 0deg),
+            #f0f0f0 var(--progress-degree, 0deg),
+            #f0f0f0 360deg) !important;
+}
+/* circle steps ends here */
+@media (max-width: 900px) {
+    #circlebar {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+    }
+    .custom-checkout-logo {
+        height: 50px !important;
+        width: 18% !important;
+    }
+    #HidePromoCode {
+        display: unset !important;
+    }
+    /* Hide Promo Code Section */
+    #promoCode {
+        display: none !important;
+    }
+    /* Hide Progress Steps */
+    #progressBar {
+        display: none !important;
+    }
+    /* Adjust Modal Content */
+    .custom-checkout-modal-content {
+        padding: 16px !important;
+    }
+    .custom-checkout-header-controls,
+    .custom-checkout-header {
+        align-items: center !important;
+    }
+    /* Adjust Booking Card */
+    .custom-checkout-booking-card {
+        align-items: center !important;
+        text-align: center !important;
+    }
+    .custom-checkout-booking-info p {
+        margin: 8px 0 !important;
+    }
+    /* Left Section Responsiveness */
+    .custom-checkout-left-section {
+        padding: 10px !important;
+    }
+    /* Adjust Form Inputs */
+    .custom-checkout-form-group input,
+    .custom-checkout-form-group select {
+        /* width: 100% !important; */
+        margin: 10px 0 !important;
+    }
+    .custom-checkout-contact-grid {
+        display: block !important;
+    }
+    .custom-checkout-main-container {
+        flex-direction: column !important;
+    }
+    .custom-checkout-right-section {
+        display: none !important;
+        /* Hide right section if needed */
+    }
+    .custom-checkout-continue-btn,
+    .custom-checkout-step-4-button-container {
+        width: 100% !important;
+    }
+    /* Footer Links Responsive */
+    .custom-checkout-footer-links {
+        display: flex;
+        gap: 10px;
+        text-align: center;
+    }
+    .custom-checkout-footer-powered {
+        justify-content: center;
+    }
+}
+#HidePromoCode {
+    display: none;
+}
+@media (max-width: 480px) {
+    .custom-checkout-logo {
+        height: 50px !important;
+        width: 25% !important;
+    }
+    .custom-checkout-custom-footer {
+        display: grid !important;
+    }
+    .custom-checkout-footer-links a {
+        margin: 0px !important;
+    }
+    .custom-checkout-footer-powered {
+        margin-top: 10px !important;
+    }
+    .custom-checkout-pickup-dropoff {
+        display: grid !important;
+        justify-content: unset !important;
+    }
+    .custom-checkout-step-4-booking-card {
+        margin: 10px 0px !important;
+    }
+}   
+/* Custom CSS for the Checkout Page Ends Here */
+.custom-bokun-tour-guide-card {
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 10px !important;
+    padding: 20px !important;
+    font-family: Arial, sans-serif !important;
+    margin: 10px 0px !important;
+}
+.custom-bokun-top {
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-bottom: 10px !important;
+}
+.custom-bokun-title {
+    font-weight: bold !important;
+    font-size: 18px !important;
+}
+.custom-bokun-price {
+    font-size: 18px !important;
+    color: #333 !important;
+}
+.custom-bokun-description {
+    margin: 10px 0 !important;
+    color: #666 !important;
+}
+.custom-bokun-quantity-controls {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+.custom-bokun-quantity-button {
+    border: 1px solid #1D57C7 !important;
+    color: #1D57C7 !important;
+    background-color: transparent !important;
+    height: 35px;
+    width: 35px;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    font-size: 18px !important;
+    line-height: 16px !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.custom-bokun-quantity-button:hover {
+    background-color: #5281df56 !important;
+}
+.custom-bokun-quantity-input {
+    width: 30px !important;
+    text-align: center !important;
+    border: 1px solid #ffffff !important;
+}
+
+.custom-traveller-checkboxes {
+    display: flex !important;
+    gap: 10px !important;
+}
+
+.custom-traveller-checkboxes label {
+    padding: 2px 5px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 5px !important;
+    font-size: 13px !important;
+    font-weight: bold !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+
+}
+
+.custom-traveller-checkboxes label:hover {
+    background-color: #6363632b;
+}

@@ -1,0 +1,1601 @@
+.custom-bokun-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px auto;
+    width: 90%;
+    max-width: 1200px;
+}
+
+.custom-bokun-search-bar {
+    flex: 0 0 60%;
+    padding: 8px !important;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.custom-bokun-date-range {
+    flex: 0 0 39%;
+    padding: 8px !important;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.custom-bokun-daterangepicker .custom-bokun-calendar td.off {
+    cursor: not-allowed;
+    color: #ccc;
+    pointer-events: none;
+}
+
+.custom-bokun-selected-dates {
+    margin: 10px auto;
+    width: 90%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px !important;
+    color: #333;
+}
+
+.custom-bokun-left-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.custom-bokun-right-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.custom-bokun-date-display {
+    background-color: #f9f9f9;
+    padding: 5px 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9em !important;
+}
+
+.custom-bokun-date-display button {
+    background: none !important;
+    border: none !important;
+    color: #333 !important;
+    font-size: 1rem !important;
+    cursor: pointer !important;
+    padding: 0px !important;
+}
+
+.custom-bokun-date-display button:hover {
+    color: #e53935;
+}
+
+.custom-bokun-product-count {
+    font-weight: bold;
+}
+
+.custom-bokun-filter-btn {
+    flex: 0 0 4%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.custom-bokun-filter-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.custom-bokun-filter-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.custom-bokun-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin: 20px auto;
+    width: 90%;
+    max-width: 1200px;
+}
+
+.custom-bokun-exp-header {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 10px !important;
+    padding-left: 5% !important;
+}
+
+#custom-bokun-back-btn {
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer;
+    color: #000 !important;
+    padding: 0px !important;
+}
+
+.custom-bokun-card {
+    background: #fff !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    transition: transform 0.3s ease !important;
+    height: 550px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    cursor: pointer !important;
+    position: relative !important;
+}
+
+.custom-bokun-card:hover {
+    transform: translateY(-5px) !important;
+}
+
+.custom-bokun-card .open-direct-link {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    border: 5px;
+    color: white;
+    opacity: 0.8;
+    padding: 2px 8px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+}
+
+.custom-bokun-card .open-direct-link:hover {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    border: 5px;
+    color: white;
+    opacity: 1.0;
+    padding: 2px 8px;
+    border: 1px solid grey;
+    border-radius: 3px;
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.custom-bokun-card-img {
+    width: 100% !important;
+    height: 250px !important;
+    object-fit: cover !important;
+}
+
+.custom-bokun-card-content {
+    flex-grow: 1 !important;
+    padding: 5px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+}
+
+.custom-bokun-card-content h3 {
+    font-size: 1rem !important;
+    font-weight: bold !important;
+    margin-bottom: 0px !important;
+}
+
+.custom-bokun-author {
+    margin: 0px 0px 5px 0px !important;
+    color: gray !important;
+    font-size: 14px !important;
+}
+
+.custom-bokun-description {
+    color: gray !important;
+    overflow: hidden !important;
+    /* Hide overflow */
+    text-overflow: ellipsis !important;
+    /* Add ellipsis (...) */
+    display: -webkit-box !important;
+    /* Required for multi-line truncation */
+    -webkit-line-clamp: 3 !important;
+    /* Show up to 3 lines */
+    -webkit-box-orient: vertical !important;
+    /* Specify vertical alignment */
+    line-height: 1.5 !important;
+    /* Adjust line height for spacing */
+    max-height: 4.5em !important;
+    /* Approx. 3 lines with line height 1.5 */
+    margin-bottom: 10px !important;
+}
+
+.custom-bokun-from-style {
+    color: gray !important;
+    font-size: 12px !important;
+}
+
+.custom-bokun-card-footer {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    font-size: 0.9rem !important;
+    color: #333 !important;
+    padding: 5px 5px !important;
+    margin-top: auto !important;
+    background: #fff !important;
+    position: sticky !important;
+    bottom: 0 !important;
+}
+
+.custom-bokun-card-footer .custom-bokun-price {
+    font-weight: 100 !important;
+    color: gray !important;
+    font-size: 0.8em !important;
+}
+
+.custom-bokun-card-footer .custom-bokun-price .custom-bokun-from-style {
+    font-weight: 100 !important;
+    color: black !important;
+    font-size: 1.8em !important;
+}
+
+.custom-bokun-card-footer .custom-bokun-duration {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+/* Featured Trip Cards Ends  */
+/* Grid Images card styling  */
+.activity-loading-full {
+    text-align: center;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    font-size: 16px;
+    font-weight: bold;
+    font-style: italic;
+    z-index: 100;
+    color: black;
+    background-color: rgba(255, 255, 255, 0.5);
+    vertical-align: middle;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+}
+
+.activity-loading-full-block {
+    text-align: center;
+    width: 100%;
+    height: 250px;
+    font-size: 16px;
+    font-weight: bold;
+    font-style: italic;
+    z-index: 100;
+    color: black;
+    background-color: rgba(255, 255, 255, 0.5);
+    vertical-align: middle;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+}
+
+.custom-bokun-cards-wrapper {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    justify-content: space-between;
+    gap: 24px;
+    margin: 50px auto;
+    width: 100%;
+    max-width: 1200px;
+}
+
+.custom-bokun-category-card {
+    position: relative;
+    background-color: #ffffff;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    aspect-ratio: 16 / 9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.custom-bokun-image-grid {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    padding: 17px 17px 17px 15px;
+    gap: 5px;
+    box-sizing: border-box;
+}
+
+.custom-bokun-products-large-image {
+    flex: 0 0 50% !important;
+    /* height: 410px !important; */
+}
+
+.custom-bokun-products-large-image img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+    border-radius: 5px !important;
+}
+
+.custom-bokun-large-image {
+    flex: 0 0 50% !important;
+    height: 410px !important;
+}
+
+.custom-bokun-large-image img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.custom-bokun-small-images {
+    flex: 0 0 49% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 5px;
+    height: 100%;
+}
+
+.custom-bokun-small-image {
+    height: 200px !important;
+}
+
+.custom-bokun-product-small-images {
+    flex: 0 0 49% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 5px;
+    height: 100%;
+}
+
+.custom-bokun-product-small-images img {
+    width: 100% !important;
+    height: calc(50% - 2.5px) !important;
+    object-fit: cover !important;
+    border-radius: 5px;
+}
+
+.custom-bokun-product-small-images {
+    flex: 1 !important;
+}
+
+.custom-bokun-product-small-images img {
+    width: 100% !important;
+    object-fit: cover !important;
+    border-radius: 5px !important;
+}
+
+.custom-bokun-product-small-images {
+    grid-template-columns: 1fr 1fr !important;
+    /* Maintain two-column layout */
+}
+
+.custom-bokun-small-images img {
+    width: 100% !important;
+    height: calc(50% - 2.5px) !important;
+    object-fit: cover !important;
+    border-radius: 5px;
+}
+
+.custom-bokun-card-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+}
+
+.custom-bokun-card-overlay h2 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #fff !important;
+}
+
+.custom-bokun-card-overlay p {
+    font-size: 1rem;
+    margin-bottom: 12px;
+}
+
+.custom-bokun-view-list {
+    background: #fff !important;
+    color: #000 !important;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.custom-view-photos-btn:hover {
+    background-color: #ebedf0 !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.custom-view-photos-btn {
+    position: absolute !important;
+    top: 40px !important;
+    right: 40px !important;
+    background-color: #FFFFFF !important;
+    color: #1D57C7 !important;
+    border: none !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    padding: 12px !important;
+    border-radius: 5px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+    cursor: pointer !important;
+    z-index: 10 !important;
+    /* Ensure it's above the images */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.custom-bokun-view-list:hover {
+    background: #f0f0f0;
+}
+
+/* Grid Images card Styling Ends */
+/* Responsive Design */
+@media (max-width: 1024px) {
+
+    .custom-bokun-cards-wrapper,
+    .custom-bokun-container {
+        grid-template-columns: repeat(2, 1fr);
+        /* 2 cards per row */
+    }
+}
+
+@media (max-width: 768px) {
+
+    .custom-bokun-cards-wrapper,
+    .custom-bokun-container {
+        grid-template-columns: 1fr;
+        /* 1 card per row */
+    }
+
+    .custom-bokun-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .custom-bokun-search-bar,
+    .custom-bokun-date-range,
+    .custom-bokun-filter-btn {
+        width: 100%;
+        flex: 1;
+    }
+
+    .custom-bokun-card {
+        width: 100%;
+        /* Full width for smaller screens */
+    }
+
+    .custom-bokun-card-overlay h2 {
+        font-size: 1.2rem;
+    }
+
+    .custom-bokun-card-overlay p {
+        font-size: 0.9rem;
+    }
+
+    .custom-bokun-view-list {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
+}
+
+.custom-bokun-button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+.custom-bokun-open-modal-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #1D57C7;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.custom-bokun-open-modal-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Modal Styles */
+.custom-bokun-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-y: auto;
+}
+
+.custom-bokun-modal * {
+    box-sizing: content-box !important;
+}
+
+.custom-bokun-modal-content,
+#img-gallery-container {
+    background: white !important;
+    width: 100% !important;
+    max-width: 1200px !important;
+    padding: 0px 15px !important;
+    overflow: hidden !important;
+}
+
+.custom-bokun-modal-content.active,
+#img-gallery-container.active {
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Header */
+.custom-bokun-modal-header {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    margin-top: 40px !important;
+    background-color: #fff !important;
+}
+
+.custom-bokun-header-controls {
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+}
+
+/* Dropdown Styling */
+.custom-bokun-dropdown-container {
+    position: relative !important;
+}
+
+.custom-bokun-modal-header .custom-bokun-dropdown {
+    width: 200px !important;
+    padding: 15px 12px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 5px !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-color: #fff !important;
+    background: url('assets/icons/arrow-down.svg') no-repeat right 10px center / 16px !important;
+    text-indent: 20px !important;
+}
+
+.custom-bokun-language-dropdown option::before {
+    content: attr(data-flag) !important;
+    background-size: contain !important;
+    margin-right: 10px !important;
+}
+
+.custom-bokun-modal-header .custom-bokun-dropdown:focus {
+    outline: none !important;
+    border-color: #1D57C7 !important;
+}
+
+/* Add Flag Icon */
+.custom-bokun-language-dropdown {
+    background: url('assets/icons/uk-flag.svg') no-repeat left 10px center / 16px,
+        url('assets/icons/arrow-down.svg') no-repeat right 10px center / 16px !important;
+    padding-left: 40px !important;
+}
+
+.custom-bokun-currency-dropdown {
+    background: url('assets/icons/arrow-down.svg') no-repeat right 10px center / 16px !important;
+}
+
+/* Buttons Styling */
+.custom-bokun-header-btn {
+    background-color: #f1f5f9 !important;
+    border: 1px solid #ddd !important;
+    border-radius: 5px !important;
+    padding: 12px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease !important;
+}
+
+.custom-bokun-header-btn:disabled {
+    color: black !important;
+}
+
+.custom-bokun-header-btn img {
+    display: block !important;
+    height: 22px !important;
+}
+
+.custom-bokun-header-btn:hover {
+    background-color: #e2e8f0 !important;
+}
+
+.custom-bokun-close-btn {
+    font-size: 30px !important;
+    font-weight: bold !important;
+    color: #6B7280 !important;
+    padding: 15px 15px !important;
+    border-radius: 5px !important;
+    justify-content: center;
+    display: flex !important;
+    background-color: #F1F5F9 !important;
+    border: 1px solid #ddd !important;
+}
+
+.custom-bokun-modal-header .custom-bokun-close-btn:hover {
+    background-color: #e2e8f0 !important;
+}
+
+/* Image Grid */
+.custom-bokun-image-grid-container {
+    gap: 10px !important;
+    padding: 20px !important;
+    position: relative !important;
+}
+
+.custom-bokun-large-image {
+    flex: 1 !important;
+}
+
+.custom-bokun-large-image img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 5px !important;
+}
+
+.custom-bokun-small-images {
+    flex: 1 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-auto-rows: 1fr !important;
+    gap: 10px !important;
+}
+
+.custom-bokun-small-images img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 5px !important;
+}
+
+/* Modal Body */
+.custom-bokun-modal-body {
+    display: flex !important;
+    padding: 20px !important;
+    gap: 20px !important;
+    width: 100% !important;
+}
+
+.custom-bokun-modal-left-section {
+    /* flex: 2!important ; */
+    flex: 0 0 55% !important;
+}
+
+.custom-bokun-tabs {
+    display: flex !important;
+    gap: 100px !important;
+    border-bottom: 1px solid rgb(223, 223, 223) !important;
+    text-align: left !important;
+    justify-content: left !important;
+}
+
+.custom-bokun-tabs button {
+    padding: 10px !important;
+    border: none !important;
+    background: #ffffff !important;
+    color: #1d57c7 !important;
+    cursor: pointer !important;
+    font-weight: normal !important;
+    text-wrap: nowrap !important;
+    border-radius: 0px !important;
+    transition: none !important;
+}
+
+.custom-bokun-tabs button:hover {
+    border-bottom: 2px solid #1D57C7 !important;
+    border-radius: 0px !important;
+    transition: none !important;
+}
+
+.custom-bokun-tabs button.active {
+    border-bottom: 2px solid #1D57C7 !important;
+}
+
+.custom-bokun-tab-content {
+    padding: 20px 0px !important;
+    border-radius: 5px !important;
+}
+
+.custom-bokun-itinerary-images {
+    display: flex !important;
+    gap: 10px !important;
+    margin-top: 15px !important;
+    margin-bottom: 15px !important;
+}
+
+.custom-bokun-itinerary-images img {
+    width: 48% !important;
+    border-radius: 5px !important;
+    object-fit: cover !important;
+}
+
+.custom-bokun-modal-right-section {
+    flex: 0 0 38% !important;
+    border-radius: 10px !important;
+    padding: 20px !important;
+    border: 1px solid #ddd;
+    height: fit-content !important;
+}
+
+.custom-bokun-selected-participants {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+.custom-bokun-border-b {
+    border-bottom: 4px solid #0056b3 !important;
+    width: fit-content !important;
+}
+
+.hHknew {
+    width: 42px !important;
+    height: 6px !important;
+    margin-top: 8px !important;
+    background: rgb(29, 87, 199) !important;
+    border-radius: 13px !important;
+}
+
+.custom-bokun-participant-controls {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-top: 20px !important;
+}
+
+.custom-bokun-participant-controls button {
+    padding: 0px !important;
+    width: 35px !important;
+    height: 35px !important;
+    border: 1px solid #1D57C7 !important;
+    background-color: white !important;
+    border-radius: 50% !important;
+    color: black !important;
+    font-size: 18px !important;
+    cursor: pointer !important;
+}
+
+.custom-bokun-date-picker {
+    margin-top: 20px !important;
+}
+
+.custom-bokun-date-picker input {
+    width: 100% !important;
+    padding: 10px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 5px !important;
+}
+
+.custom-bokun-additional-info {
+    margin-top: 30px !important;
+    font-size: 14px !important;
+    color: #333 !important;
+}
+
+.custom-bokun-info-group {
+    margin-bottom: 30px !important;
+    width: 300px !important;
+}
+
+.custom-bokun-info-group h3 {
+    font-size: 18px !important;
+    font-weight: bold !important;
+    margin-bottom: 10px !important;
+    color: #222 !important;
+}
+
+.custom-bokun-info-underline {
+    width: 50px !important;
+    height: 4px !important;
+    background-color: #0056b3 !important;
+    margin-bottom: 10px !important;
+}
+
+.custom-bokun-info-group ul {
+    list-style-type: disc !important;
+    padding-left: 20px !important;
+    margin: 0px !important;
+}
+
+.custom-bokun-info-group ul li {
+    margin-bottom: 8px !important;
+}
+
+.custom-bokun-info-group p {
+    margin-bottom: 8px !important;
+}
+
+/* Gallery Container */
+#img-gallery-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* Back Button */
+.custom-gallery-back-btn {
+    position: absolute !important;
+    top: 20px !important;
+    left: 20px !important;
+    background-color: transparent !important;
+    color: #fff !important;
+    border: none !important;
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    z-index: 1000 !important;
+}
+
+.custom-gallery-back-btn:hover {
+    background-color: #d04d1c !important;
+}
+
+/* Fullscreen Slideshow */
+#img-gallery-container {
+    position: relative !important;
+    width: 99% !important;
+    height: 100%;
+    background-color: #000 !important;
+    display: flex;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+}
+
+/* Large Image Wrapper */
+.img-wrapper {
+    display: none;
+    width: 100%;
+    /* Adjust width for large image */
+    height: 100%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: opacity 0.5s ease-in-out;
+}
+
+#slideshow {
+    height: 50%;
+    max-height: 660px;
+    width: 660px;
+    max-width: 100%;
+}
+
+.img-wrapper.active {
+    display: block;
+}
+
+/* Navigation Buttons */
+.custom-gallery-prev,
+.custom-gallery-next {
+    position: absolute !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-size: 1.5rem !important;
+    /* Reduced size */
+    background: rgba(0, 0, 0, 0.5) !important;
+    color: #fff !important;
+    padding: 5px !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    z-index: 10 !important;
+}
+
+.custom-gallery-prev {
+    left: 20px !important;
+}
+
+.custom-gallery-next {
+    right: 20px !important;
+}
+
+.custom-gallery-custom-gallery-prev:hover,
+.custom-gallery-next:hover {
+    background: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Thumbnail Section */
+.thumbs-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px;
+    overflow-x: auto;
+}
+
+.thumbs {
+    display: flex;
+    gap: 10px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.thumb {
+    width: 80px;
+    height: 50px;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid transparent;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.3s ease, border 0.3s ease;
+}
+
+.thumb.active {
+    border-color: #f16622;
+    opacity: 1;
+}
+
+/* Custom Bokun More Info Section */
+.custom-bokun-more-info {
+    margin-top: 40px;
+    color: #333;
+    font-size: 14px;
+}
+
+.custom-bokun-more-info h2 {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #222;
+}
+
+.custom-bokun-underline {
+    width: 50px;
+    height: 4px;
+    background-color: #0056b3;
+    margin-bottom: 20px;
+    border-radius: 10px;
+}
+
+/* Grid Layout for Info Columns */
+.custom-bokun-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 20px;
+}
+
+.custom-bokun-info-column h4 {
+    font-size: 14px;
+    font-weight: bold;
+    color: #000;
+    margin-bottom: 5px;
+}
+
+.custom-bokun-info-column p {
+    font-size: 14px;
+    color: #555;
+}
+
+.custom-bokun-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    margin-left: 5px;
+    font-size: 12px;
+    color: #0056b3;
+    background-color: #e7f1ff;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* Categories Section */
+.custom-bokun-categories-section h4 {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.custom-bokun-categories-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    max-width: 400px;
+    align-items: flex-start;
+}
+
+.custom-bokun-tag {
+    flex: 0 1 auto;
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #0056b3;
+    background-color: #e7f1ff;
+    border-radius: 4px;
+    white-space: nowrap;
+    cursor: default;
+}
+
+.custom-bokun-tag:hover {
+    background-color: #dbe9ff;
+}
+
+/* Media Queries for Responsiveness */
+@media screen and (max-width: 1125px) {
+    .custom-bokun-left-section {
+        /* flex: 2; */
+        flex: 0 0 50% !important;
+        width: 60% !important;
+    }
+
+    .custom-bokun-right-section {
+        margin-top: 20px !important;
+        flex: 0 0 33% !important;
+        border-radius: 10px !important;
+        padding: 20px !important;
+        border: 1px solid #00000033 !important;
+        height: fit-content !important;
+        padding-bottom: 50px !important;
+        /* Add spacing between sections */
+    }
+}
+
+@media screen and (max-width: 920px) {
+    .custom-bokun-modal-body {
+        flex-direction: column !important;
+        padding: 0px !important;
+        /* Stack content vertically */
+    }
+
+    .custom-bokun-left-section {
+        width: 100% !important;
+    }
+
+    .custom-bokun-left-section,
+    .custom-bokun-right-section {
+        flex: 0 0 100% !important;
+    }
+
+    .custom-bokun-right-section {
+        margin-top: 20px !important;
+        /* Add spacing between sections */
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .custom-bokun-tabs {
+        gap: 50px !important;
+        overflow-x: scroll !important;
+        scrollbar-width: none !important;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .custom-bokun-modal-body {
+        flex-direction: column !important;
+        padding: 0px !important;
+        /* Stack content vertically */
+    }
+
+    .custom-bokun-tabs button {
+        padding: 10px 30px !important;
+    }
+
+    .custom-bokun-left-section,
+    .custom-bokun-right-section {
+        flex: 0 0 100% !important;
+    }
+
+    .custom-bokun-right-section {
+        margin-top: 20px !important;
+        /* Add spacing between sections */
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .custom-bokun-cart-modal {
+        top: 115px !important;
+        left: 50% !important;
+    }
+
+    .group-size-dropdown {
+        width: 60% !important;
+    }
+
+    .custom-bokun-modal-content {
+        padding: 20px !important;
+        /* Reduce padding on smaller screens */
+    }
+
+    .custom-bokun-tabs {
+        gap: 0px !important;
+        overflow-x: scroll !important;
+        scrollbar-width: none !important;
+    }
+
+    .custom-bokun-tabs button {
+        padding: 10px 20px !important;
+    }
+
+    .custom-bokun-header-controls {
+        gap: 10px !important;
+        /* Adjust header controls spacing */
+    }
+
+    .custom-bokun-image-grid-container {
+        flex-direction: column !important;
+    }
+
+    .custom-bokun-large-image {
+        height: 250px !important;
+    }
+
+    .custom-bokun-small-images {
+        grid-template-columns: 1fr 1fr !important;
+        /* Maintain two-column layout */
+    }
+
+    .custom-bokun-small-image {
+        height: 120px !important;
+    }
+
+    .custom-view-photos-btn {
+        font-size: 12px !important;
+        padding: 8px !important;
+    }
+}
+
+.hidden {
+    display: none !important;
+}
+
+.package-options-error h5 {
+    color: red !important;
+    font-weight: 100 !important;
+    width: 100%;
+    text-align: center;
+}
+
+.participant-count {
+    min-width: 20px;
+    text-align: center;
+}
+
+#confirmButton {
+    transition: all 0.3s ease;
+}
+
+.iti__selected-flag {
+    width: 70px !important;
+    text-align: center !important;
+    display: flex !important;
+    justify-content: center !important;
+}
+
+#custom-phone-code-picker {
+    padding-left: 79px !important;
+}
+
+.custom-bokun-header-btn {
+    position: relative !important;
+}
+
+.cart-badge {
+    position: absolute !important;
+    top: -6px !important;
+    right: -6px !important;
+    background-color: #fb5e60 !important;
+    color: white !important;
+    border-radius: 100% !important;
+    padding: 1px 6px !important;
+    font-size: 10px !important;
+    font-weight: normal !important;
+    display: none;
+    min-width: 8px !important;
+    height: 18px !important;
+    /* Hide the badge by default */
+}
+
+.custom-bokun-content {
+    max-width: 800px !important;
+    margin: 40px auto !important;
+    padding: 20px !important;
+    background: #fafafa !important;
+    border-radius: 8px !important;
+    box-shadow: 0 0px 11px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Thank You Message */
+.custom-bokun-thank-you-message h1 {
+    font-size: 28px !important;
+    color: #2e7d32 !important;
+    margin-bottom: 10px !important;
+}
+
+.custom-bokun-thank-you-message p {
+    font-size: 16px !important;
+    color: #666 !important;
+    margin-bottom: 30px !important;
+}
+
+/* Payment Details */
+.custom-bokun-payment-details h2 {
+    font-size: 20px !important;
+    color: #333 !important;
+    margin-bottom: 15px !important;
+    border-bottom: 2px solid #2e7d32 !important;
+    padding-bottom: 8px !important;
+}
+
+.custom-bokun-payment-summary p {
+    font-size: 14px !important;
+    color: #555 !important;
+    margin: 8px 0 !important;
+}
+
+/* Booking Details */
+.custom-bokun-booking-details h2 {
+    font-size: 20px !important;
+    color: #333 !important;
+    margin-top: 30px !important;
+    margin-bottom: 15px !important;
+    border-bottom: 2px solid #2e7d32 !important;
+    padding-bottom: 8px !important;
+}
+
+.custom-bokun-booking-summary {
+    display: flex !important;
+    gap: 16px !important;
+    align-items: flex-start !important;
+    margin: 10px 0px !important;
+}
+
+.custom-bokun-tour-image {
+    width: 120px !important;
+    height: 120px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+    border: 1px solid #ddd !important;
+}
+
+.custom-bokun-booking-summary h3 {
+    font-size: 18px !important;
+    color: #333 !important;
+    margin-bottom: 10px !important;
+}
+
+.custom-bokun-booking-summary p {
+    font-size: 14px !important;
+    color: #555 !important;
+    margin: 4px 0 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .custom-bokun-content {
+        width: 90% !important;
+        margin: 20px auto !important;
+    }
+
+    .custom-bokun-booking-summary {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+
+    .custom-bokun-tour-image {
+        margin-bottom: 10px !important;
+    }
+}
+
+.image-unavailable-hide {
+    visibility: hidden !important;
+}
+
+@media screen and (min-width: 1100px) {
+    #custom-phone-code-picker {
+        width: 342px !important;
+    }
+}
+
+.iti.iti--container {
+    z-index: 9999 !important;
+}
+
+.custom-bokun-difficulty-circle {
+    height: 14px !important;
+    width: 14px !important;
+    border-radius: 50% !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    border: 2px solid #636363 !important;
+    rotate: 180deg !important;
+}
+
+.custom-bokun-rating-container {
+    display: flex !important;
+    align-items: center !important;
+    margin-bottom: 10px !important;
+    gap: 5px !important;
+}
+
+.custom-bokun-rating-circles {
+    display: flex !important;
+    gap: 5px !important;
+}
+
+.custom-bokun-rating-circle {
+    width: 10px !important;
+    height: 10px !important;
+    border-radius: 50% !important;
+    border: 2px solid #00aa6c !important;
+    background-color: white;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.custom-bokun-rating-circle .custom-bokun-partial-fill {
+    background-color: #00aa6c !important;
+    height: 100% !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+}
+
+.custom-bokun-review-count {
+    font-size: 14px !important;
+    margin-left: 10px !important;
+}
+
+.custom-bokun-review-link {
+    text-decoration: none !important;
+    color: inherit !important;
+    margin: 0px !important;
+}
+
+.group-size-dropdown-container {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-content: flex-end;
+}
+
+.group-size-dropdown-container label {
+    font-size: 14px !important;
+}
+
+.group-size-dropdown {
+    width: 20% !important;
+}
+
+.custom-bokun-cart-modal {
+    position: absolute !important;
+    top: 90px;
+    left: 73%;
+    transform: translateX(-50%) !important;
+    width: 370px !important;
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+    display: none;
+    z-index: 1000 !important;
+}
+
+/* Modal Header */
+.custom-bokun-cart-modal-header {
+    background-color: #007BFF !important;
+    color: white !important;
+    padding: 0px !important;
+    margin: 10px !important;
+    text-align: center !important;
+    font-size: 0.8rem !important;
+    border-radius: 5px !important;
+    font-weight: bold !important;
+}
+
+.custom-bokun-cart-close-btn {
+    position: absolute !important;
+    top: 16px !important;
+    right: 16px !important;
+    background: none !important;
+    border: none !important;
+    color: white !important;
+    font-size: 1.5rem !important;
+    cursor: pointer !important;
+}
+
+/* Modal Body */
+.custom-bokun-cart-modal-body {
+    padding: 0px 16px !important;
+}
+
+.cart-item {
+    border-bottom: 1px solid #ddd !important;
+    padding-bottom: 16px !important;
+}
+
+.cart-item-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.cart-item-price {
+    font-weight: bold !important;
+    color: #333 !important;
+}
+
+.cart-item-remove {
+    background: none !important;
+    border: none !important;
+    color: #959595dd !important;
+    font-size: 1.2rem !important;
+    cursor: pointer !important;
+}
+
+.toggle-details {
+    color: #007bff !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    font-size: 0.9rem !important;
+}
+
+.toggle-details:hover {
+    text-decoration: underline !important;
+}
+
+.cart-item-details {
+    display: none !important;
+    margin-top: 8px !important;
+}
+
+.cart-detail-price,
+.cart-detail-info {
+    float: right !important;
+    color: #555 !important;
+}
+
+.cart-detail-price {
+    font-weight: bold !important;
+}
+
+/* Modal Footer */
+.custom-bokun-cart-modal-footer {
+    text-align: center !important;
+    padding: 16px !important;
+    font-size: 1.1rem !important;
+    font-weight: bold !important;
+    display: flex !important;
+    justify-content: space-between !important;
+}
+
+.cart-total-price {
+    float: right !important;
+    font-weight: bold !important;
+}
+
+#cartCheckoutBtn {
+    background: none;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 10px 0px !important;
+}
+
+#cartCheckoutBtn:disabled {
+    background: darkgray !important;
+    cursor: not-allowed !important;
+}
+
+.cart-item-details.show {
+    display: block !important;
+}
+
+.cart-item-price-container {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.cart-item-price-container small {
+    text-wrap: nowrap !important;
+}
+
+.cart-item-price-container button {
+    padding: 2px !important;
+    margin: 0 !important;
+}
+
+.cart-item-header p {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 0px !important;
+    margin: 0 !important;
+}
+
+.cart-item-details p {
+    margin: 0 !important;
+}
+
+.cart-item-details p span {
+    font-size: 12px !important;
+}
+
+.custom-checkout-info-row span {
+    font-size: 12px !important;
+}
+
+.cart-item-details .custom-checkout-info-row {
+    margin-bottom: 0 !important;
+}
+
+.custom-pickup-section .custom-form-group {
+    margin-bottom: 2px !important;
+}
+
+.custom-form-child-section {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 10px;
+
+}
+.text-danger{
+    color: red !important;
+}
+.custom-question-help{
+
+    font-size: 13px;
+    font-style: italic;
+    line-height: 16px;
+    color: rgb(150, 150, 150);
+}
