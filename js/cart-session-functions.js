@@ -1,12 +1,36 @@
 var MainContactFormData;
 var activityTabData = {};
+
+
 jQuery(function ($) {
-  /**
- * fillActivityTabs() – Walks through the global activityTabData object
- * and fills in the corresponding tab fields.
- */
+  function getStoredActivityTabData() {
+    $.ajax({
+        url: bokunAjax.ajaxUrl,
+        method: "POST",
+        data: {
+            action: "get_activity_tab_data",
+            session_id: getOrCreateSessionId(),  // Ensure session ID is sent
+        },
+        success: function (response) {
+            if (response.success && response.data) {
+                activityTabData = response.data.activityTabData;
+                MainContactFormData = response.data.mainContactDetails;
+                console.log("response from get activity tab data" ,response)
+                console.log("Retrieved activityTabData from transient:", activityTabData);
+            } else {
+                console.warn("No stored activity data found.");
+            }
+        },
+        error: function () {
+            console.error("Error retrieving activity data.");
+        }
+    });
+  }
+  getStoredActivityTabData();
+
   function fillActivityTabs() {
     // Loop over each key in the activityTabData
+    if(activityTabData == null) return;
     Object.keys(activityTabData).forEach(function (key) {
       // Expected key format: productId_index (e.g. "930914_0")
       var keyParts = key.split('_');
@@ -144,8 +168,6 @@ jQuery(function ($) {
     });
   }
 
-
-
   function fillForm(moveNext = false) {
     console.log("fill form function called");
     if (!MainContactFormData) {
@@ -169,6 +191,7 @@ jQuery(function ($) {
       moveToNextStep();
     }
   }
+
   function formatDateToISO(dateString) {
     const date = new Date(dateString);
     const year = date.getFullYear();
@@ -364,9 +387,8 @@ jQuery(function ($) {
       const productConfirmationCode = item.productConfirmationCode;
       const rate = item.rate;
       var bookingType = rate?.pricedPerPerson ? "SINGLE_PERSON" : "GROUP";
-      const maxPerBookingForPerPerson = item.pricingCategoryBookings.length;
-      const validatedMaxPerBooking =
-        bookingType === "GROUP" ? 1 : maxPerBookingForPerPerson;
+      var maxPerBookingForPerPerson = item.pricingCategoryBookings.length;
+      var validatedMaxPerBooking = bookingType === "GROUP" ? 1 : maxPerBookingForPerPerson;
       if (!activityId || !rateId) {
         console.warn("Activity or rate ID is missing:", item);
         return;
@@ -397,7 +419,8 @@ jQuery(function ($) {
                   priceResponse.data.pricesByDateRange?.[0]?.rates.find(
                     (rate) => rate.rateId === rateId
                   );
-
+                
+                 console.log("matchingRate", matchingRate);
                 if (!matchingRate) {
                   console.warn(`No matching rate found for rateId: ${rateId}`);
                   return;
@@ -415,16 +438,28 @@ jQuery(function ($) {
                     const amount = price || 0;
                     const currency = localStorage.getItem("currency") || "AED";
                     const imageUrl = photo?.originalUrl || null;
-                    // if(imageUrl === null && bookingType === 'SINGLE_PERSON') {
-                    //   bookingType = 'GROUP';
-                    // }
+                    const rates = detailsResponse?.data?.rates.map((rate) => {
+                      const detailRateId = rate.id;
+                      if(rateId === detailRateId){
+                        const extraConfigs = rate?.extraConfigs.map((config) => {
+                          if(config.pricedPerPerson === false){
+                            bookingType = "GROUP";
+                            validatedMaxPerBooking = 1;
+                            console.log("pricedPerPerson", config.pricedPerPerson);
+                          }
+                       })
+                      }else{
+                        console.log("rate id did not match")
+                      }
+                    });
                     const existingExtra = item.extraBookings.find(
                       (e) => e.extra.id === extraId
                     );
                     const initialQuantity = existingExtra
                       ? existingExtra.unitCount
                       : 0;
-
+                    console.log( "booking type" ,bookingType);
+                  
                     if (bookingType === "SINGLE_PERSON") {
                       const checkboxContainerId = `checkboxContainer_${activityId}_${extraId}`;
                       console.log("passengercheckboxes", item.pricingCategoryBookings);
@@ -568,8 +603,8 @@ jQuery(function ($) {
       })
     );
 
-    const validatedMaxPerBooking = Math.min(maxPerBooking, passengers.length);
-
+    const validatedMaxPerBooking =  maxPerBooking;
+   console.log("max per booking from group" ,validatedMaxPerBooking)
     function toggleButtons(disable = false) {
       incrementButton.disabled = disable || currentQuantity >= validatedMaxPerBooking;
       decrementButton.disabled = disable || currentQuantity <= minQuantity;
@@ -1005,6 +1040,7 @@ jQuery(function ($) {
     $button.html("Please wait...");
     handleCheckoutModalApiCalls("add", null, null, false)
       .then(() => {
+        
         $button.prop("disabled", false);
         if (MainContactFormData !== null) {
           fillForm(false);
@@ -1126,21 +1162,20 @@ jQuery(function ($) {
         `
         : ""
       }
-      ${checkoutExperience
-        .map((experience, index) => {
-          // Find the corresponding activity booking for this experience
-          const activityBooking =
-            checkoutOptionsResponse.data.questions.activityBookings.find(
-              (booking) => booking.activityId === experience.product.id
-            );
+      ${checkoutExperience.map((experience, index) => {
+        // Find the corresponding activity booking for this experience
+        const activityBooking =
+          checkoutOptionsResponse.data.questions.activityBookings.find(
+            (booking) => booking.activityId === experience.product.id
+          );
 
-          return ` 
+        return ` 
     <div class="custom-checkout-step" data-step="${index + 2}" id="experienceStep_${index}" style="display: none;">
           <h2 class="custom-checkout-section-title">Complete your booking</h2>
         <div class="custom-checkout-divider"></div>
       <div class="custom-checkout-booking-card" data-product-booking-id="${experience.productBookingId}">
         <img src="${experience.product.keyPhoto?.originalUrl ||
-            "assets/img/default-tour-image.jpg"}" alt="${experience.product.title}" class="custom-checkout-booking-image">
+          "assets/img/default-tour-image.jpg"}" alt="${experience.product.title}" class="custom-checkout-booking-image">
         <div class="custom-checkout-booking-details">
           <h3 class="custom-checkout-booking-title">${experience.product.title}</h3>
           <div class="custom-checkout-booking-info">
@@ -1190,9 +1225,9 @@ jQuery(function ($) {
           <div id="ParticipantFormData_${index}">
          
           ${activityBooking && (activityBooking.questions?.length > 0 || activityBooking.passengers?.some(
-              (passenger) => passenger.passengerDetails?.length > 0
-            )) ?
-              `        
+            (passenger) => passenger.passengerDetails?.length > 0
+          )) ?
+            `        
               <h2 class="custom-checkout-section-title">Participants</h2>
               <div class="custom-checkout-divider"></div>
                 <div class="custom-checkout-participant-box">
@@ -1201,11 +1236,11 @@ jQuery(function ($) {
 
             <div class="custom-checkout-booking-question-box" id="booking-question-box_${index}">
               ${activityBooking.questions
-                  .map((question) => {
-                    let inputType = "text"; // Default to text
-                    if (question.dataType === "DATE") inputType = "date";
-                    if (question.dataType === "NUMBER") inputType = "number";
-                    return `
+                .map((question) => {
+                  let inputType = "text"; // Default to text
+                  if (question.dataType === "DATE") inputType = "date";
+                  if (question.dataType === "NUMBER") inputType = "number";
+                  return `
                     <div class="custom-checkout-participant-inputs">
                       <div class="custom-checkout-form-group">
                         <label for="${question.questionId}_${index}">
@@ -1221,32 +1256,32 @@ jQuery(function ($) {
                         />
                       </div>
                     </div>`;
-                  })
-                  .join("")}
+                })
+                .join("")}
               </div>
               ` : ""
-              }
+            }
                 ${activityBooking &&
-                activityBooking.passengers.some(
-                  (passenger) => passenger.passengerDetails.length > 0
-                )
-                ? `
+              activityBooking.passengers.some(
+                (passenger) => passenger.passengerDetails.length > 0
+              )
+              ? `
               ${activityBooking.passengers
-                  .map(
-                    (passenger, passengerIndex) => `
+                .map(
+                  (passenger, passengerIndex) => `
 
                     <div class="custom-checkout-participant-inputs">
                      <h3>Traveller ${passengerIndex + 1} (${passenger.pricingCategoryTitle
-                      })</h3>
+                    })</h3>
                           <div class="custom-form-child-section">
                       ${passenger.passengerDetails
-                        .map((detail) => {
-                          // Determine input type based on dataType
-                          let inputType = "text"; // Default to "text"
-                          if (detail.dataType === "DATE") inputType = "date";
-                          if (detail.dataType === "NUMBER") inputType = "number";
+                      .map((detail) => {
+                        // Determine input type based on dataType
+                        let inputType = "text"; // Default to "text"
+                        if (detail.dataType === "DATE") inputType = "date";
+                        if (detail.dataType === "NUMBER") inputType = "number";
 
-                          return `
+                        return `
                           <div class="custom-checkout-form-group">
                             <label for="${detail.questionId}_${index}_${passengerIndex}">
                               ${detail.label} ${detail.required ? "<span>*</span>" : ""}
@@ -1261,19 +1296,19 @@ jQuery(function ($) {
                               ${inputType === "date" ? 'placeholder="YYYY-MM-DD"' : ""}
                             />
                           </div>`;
-                        })
-                        .join("")}
+                      })
+                      .join("")}
                         </div>
                       </div>
                     `
-                  )
-                  .join("")}`
-                : ""
-              }
-               </div>
-           </div>`
+                )
+                .join("")}`
               : ""
             }
+               </div>
+           </div>`
+            : ""
+          }
                   
           <div class="custom-checkout-continue-btn">
               <button id="continueToStep${index + 3}">Continue</button>
@@ -1281,7 +1316,7 @@ jQuery(function ($) {
       </div>
       </div>
    `;
-        })
+      })
         .join("")}
       <!-- Refund Terms -->
     
@@ -1333,16 +1368,14 @@ jQuery(function ($) {
                 <div class="custom-checkout-step-4-info">
                   <p><strong>Travellers:</strong> ${experience.lineItems[0].people ?? "not found"
             }</p>
-                  <p><strong>Departure:</strong> ${experience.lineItems[0].totalAsText ?? "not found"
+                  <p><strong>Duration:</strong> ${experience.lineItems[0].totalAsText ?? "not found"
             }</p>
-                  <p><strong>Duration:</strong> 8 hours</p>
+                  <p><strong>Departure:</strong> 8 hours</p>
                 </div>
               </div>
             </div>
-          
         `
-        )
-        .join("")}
+        ).join("")}
         </div>
         <div class="custom-checkout-promo-code" id="HidePromoCode">
            <label for="promo">Promo Code</label>
@@ -1683,83 +1716,88 @@ jQuery(function ($) {
           $(parentPickupDropoffDiv).remove();
           // $("#addExpSection").remove();
         }
-
         $(`#continueToStep${index + 3}`).on("click", function () {
-          const activityAnswers = hasActivityQuestions
-            ? questions.map((question) => {
-              const inputId = `${question.questionId}_${index}`;
-              const inputValue = $(`#${inputId}`).val()?.trim() || "";
-
-              return inputValue
-                ? {
-                  questionId: question.questionId,
-                  values: [inputValue],
-                }
-                : null;
-            }).filter(Boolean)
-            : undefined;
-
-          const pickupAnswers = hasPickup && $(`#pickupSearch_${index}`).val()?.trim()
-            ? [{
-              questionId: "pickupPlaceDescription",
-              values: [$(`#pickupSearch_${index}`).val().trim()],
-            }]
-            : undefined;
-
-          const dropoffAnswers = hasDropoff && $(`#dropoffSearch_${index}`).val()?.trim()
-            ? [{
-              questionId: "dropoffPlaceDescription",
-              values: [$(`#dropoffSearch_${index}`).val().trim()],
-            }]
-            : undefined;
-
-          const processedPassengers = hasPassengers
-            ? passengers.map((passenger, passengerIndex) => {
-              const passengerDetails = passenger.passengerDetails
-                .map((detail) => {
-                  const inputId = `${detail.questionId}_${index}_${passengerIndex}`;
-                  const inputValue = $(`#${inputId}`).val()?.trim() || "";
-
-                  return inputValue
-                    ? {
-                      questionId: detail.questionId,
-                      values: [inputValue],
-                    }
-                    : null;
-                })
-                .filter(Boolean);
-
-              return {
-                pricingCategoryId: passenger.pricingCategoryId,
-                bookingId: passenger.bookingId,
-                ...(passengerDetails.length > 0 && { passengerDetails }),
-              };
-            })
-            : undefined;
-
-          // Store activity data
-          const activityData = {
-            ...(activityAnswers && { answers: activityAnswers }),
-            ...(pickupAnswers && { pickupAnswers }),
-            ...(dropoffAnswers && { dropoffAnswers }),
-            ...(processedPassengers && { passengers: processedPassengers }),
-          };
-
-          // Unique key for each activity
           const activityIdIndexKey = `${experience.product.id}_${index}`;
-          activityTabData[activityIdIndexKey] = activityData;
+      
+          const activityAnswers = hasActivityQuestions
+              ? questions.map((question) => {
+                    const inputId = `${question.questionId}_${index}`;
+                    const inputValue = $(`#${inputId}`).val()?.trim() || "";
+                    return inputValue ? { questionId: question.questionId, values: [inputValue] } : null;
+                }).filter(Boolean)
+              : undefined;
+      
+          const pickupAnswers = hasPickup && $(`#pickupSearch_${index}`).val()?.trim()
+              ? [{ questionId: "pickupPlaceDescription", values: [$(`#pickupSearch_${index}`).val().trim()] }]
+              : undefined;
+      
+          const dropoffAnswers = hasDropoff && $(`#dropoffSearch_${index}`).val()?.trim()
+              ? [{ questionId: "dropoffPlaceDescription", values: [$(`#dropoffSearch_${index}`).val().trim()] }]
+              : undefined;
+      
+          const processedPassengers = hasPassengers
+              ? passengers.map((passenger, passengerIndex) => {
+                    const passengerDetails = passenger.passengerDetails.map((detail) => {
+                        const inputId = `${detail.questionId}_${index}_${passengerIndex}`;
+                        const inputValue = $(`#${inputId}`).val()?.trim() || "";
+                        return inputValue ? { questionId: detail.questionId, values: [inputValue] } : null;
+                    }).filter(Boolean);
+      
+                    return {
+                        pricingCategoryId: passenger.pricingCategoryId,
+                        bookingId: passenger.bookingId,
+                        ...(passengerDetails.length > 0 && { passengerDetails }),
+                    };
+                })
+              : undefined;
+      
+          // Store only the relevant activity data
+          const activityData = {
+              ...(activityAnswers && { answers: activityAnswers }),
+              ...(pickupAnswers && { pickupAnswers }),
+              ...(dropoffAnswers && { dropoffAnswers }),
+              ...(processedPassengers && { passengers: processedPassengers }),
+          };
+      
+          if (!activityTabData.activityTabData) {
+              activityTabData.activityTabData = {};
+          }
 
-          console.log(
-            `Stored data for activity ${activityIdIndexKey}:`,
-            activityData
-          );
-        });
+          activityTabData.activityTabData[activityIdIndexKey] = activityData;
+      
+          console.log(`Stored data for activity ${activityIdIndexKey}:`, activityData);
+          console.log("Updated activityTabData:", activityTabData);
+      
+          $.ajax({
+              url: bokunAjax.ajaxUrl,
+              method: "POST",
+              data: {
+                  action: "store_activity_tab_data",
+                  session_id: getOrCreateSessionId(),
+                  activityTabData: JSON.stringify(activityTabData.activityTabData), // Send only nested data
+              },
+              success: function (response) {
+                  if (response.success) {
+                      console.log("Successfully stored activityTabData in transient:", response.data);
+                      activityTabData.activityTabData = response.data.activityTabData; // Keep it updated
+                  } else {
+                      console.error("Error storing activity data.");
+                  }
+              },
+              error: function () {
+                  console.error("Failed to store activity data.");
+              },
+          });
+      });
+      
+
+
       }
     });
 
-    // Console log all stored activities' data
-    console.log("All activities data:", activityTabData);
 
+    console.log("All activities data:", activityTabData);
+   
     attactCheckoutModalFunction(checkoutExperience);
     const footerLinks = document.querySelectorAll(
       ".custom-checkout-footer-link"
@@ -1833,6 +1871,7 @@ jQuery(function ($) {
         },
       });
     });
+    fillActivityTabs();
     $(document).on("click", "#confirmButton", async function () {
       var $button = $(this);
       $button.prop("disabled", true).html(`
@@ -1899,7 +1938,7 @@ jQuery(function ($) {
     };
 
     console.log("Final Shopping Cart:", shoppingCart);
-    return;
+    // return;
     $.ajax({
       url: bokunAjax.ajaxUrl,
       method: "POST",

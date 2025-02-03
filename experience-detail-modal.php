@@ -224,8 +224,8 @@ function fetch_experience_details()
 
                                     <?php if (!empty($response['knowBeforeYouGoItems'])): ?>
                                         <ul>
-                                            <?php 
-                                            foreach ($response['knowBeforeYouGoItems'] as $item): 
+                                            <?php
+                                            foreach ($response['knowBeforeYouGoItems'] as $item):
                                                 $formattedItem = ucwords(strtolower(str_replace('_', ' ', $item)));
                                                 $formattedItem = str_replace(
                                                     ['Stroller Or Pram Accessible', 'Wheelchair Accessible', 'Animals Or Pets Allowed', 'Infants Must Sit On Laps'],
@@ -252,36 +252,47 @@ function fetch_experience_details()
                                     ?>
                                 </div>
                             <?php endif; ?>
-                            <?php if (!empty($response['cancellationPolicy'] && $response['cancellationPolicy']['penaltyRules'])): ?>
+                            <?php if (!empty($response['cancellationPolicy'])): ?>
                                 <div class="custom-bokun-info-group" style="width:90% !important;">
                                     <h3>Cancellation policy</h3>
                                     <div class="sc-eACIdI hHknew"></div>
-                                    <ul>
-                                        <?php
-                                        $penaltyRules = $response['cancellationPolicy']['penaltyRules'] ?? [];
-                                        foreach ($penaltyRules as $rule):
-                                            $cutoffDays = floor($rule['cutoffHours'] / 24);
-                                            $cancellationFee = $rule['charge'] ?? 0;
-                                            if ($rule['chargeType'] === 'percentage') {
-                                                $feeText = "{$cancellationFee}%";
-                                            } else {
-                                                $feeText = "{$cancellationFee}";
-                                            }
-                                        ?>
+
+                                    <?php
+                                    $cancellationPolicy = $response['cancellationPolicy'];
+                                    $penaltyRules = $cancellationPolicy['penaltyRules'] ?? [];
+
+                                    if (!empty($penaltyRules)) : ?>
+                                        <ul>
+                                            <?php foreach ($penaltyRules as $rule):
+                                                $cutoffDays = floor($rule['cutoffHours'] / 24);
+                                                $cancellationFee = $rule['charge'] ?? 0;
+                                                $feeText = ($rule['chargeType'] === 'percentage') ? "{$cancellationFee}%" : "{$cancellationFee}";
+                                            ?>
+                                                <li>
+                                                    <?php
+                                                    if ($cancellationFee > 0) {
+                                                        echo "We will charge a cancellation fee of {$feeText} if booking is cancelled {$cutoffDays} days or less before the event.";
+                                                    } else {
+                                                        echo "We will charge a fee of {$feeText} if booking is cancelled {$cutoffDays} days or less before the event.";
+                                                    }
+                                                    ?>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    <?php elseif ($cancellationPolicy['policyTypeEnum'] === 'NON_REFUNDABLE') : ?>
+                                        <ul>
                                             <li>
                                                 <?php
-                                                if ($cancellationFee > 0) {
-                                                    echo "We will charge a cancellation fee of {$feeText} if booking is cancelled {$cutoffDays} days or less before the event.";
-                                                } else {
-                                                    echo "
-                                                    We will charge a  fee of {$feeText} if booking is cancelled {$cutoffDays} days or less before the event";
-                                                }
+                                                $title = $cancellationPolicy['title'];
+                                                echo "Bookings are {$title}. All sales are final.";
                                                 ?>
                                             </li>
-                                        <?php endforeach; ?>
-                                    </ul>
+                                        </ul>
+                                    <?php endif; ?>
+
                                 </div>
                             <?php endif; ?>
+
                             <?php if (!empty($response['activityType'] || $response['bookingCutoffHours'] || $response['durationText'] || $response['bookingCutoffHours'] || $response['activityType'] || $response['minAge'] || $response['activityCategories'] || $response['activityAttributes'])): ?>
                                 <div class="custom-bokun-more-info">
                                     <h2>More Info</h2>
@@ -551,6 +562,14 @@ function fetch_experience_details()
                             <h3 class="custom-bokun-booking-summary"></h3>
                             <div class="custom-bokun-summary-content"></div>
                         </div>
+                        <?php if (!empty($response['capacityType']) && $response['capacityType'] === "ON_REQUEST"): ?>
+                            <div class="custom-alert">
+                                <strong>⚠ Please read before continuing!</strong>
+                                <p>This experience is booked on request. The owner of the experience will respond to the request within 
+                                <strong><?php echo $response['requestDeadlineHours']; ?> hour(s)</strong>.</p>
+                            </div>
+                        <?php endif; ?>
+
                         <div class="custom-bokun-checkout-wrapper" style="text-align: center; margin-top: 20px;">
                             <button class="checkoutAction" id="checkout-button" data-activity-id="<?php echo $response['id']; ?>">
                                 <div class="custom-checkoutbtn-loader"></div>

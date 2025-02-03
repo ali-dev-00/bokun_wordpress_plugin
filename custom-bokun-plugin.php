@@ -508,3 +508,75 @@ function fetch_experience_price_list() {
 // Register AJAX actions
 add_action('wp_ajax_fetch_experience_price_list', 'fetch_experience_price_list');
 add_action('wp_ajax_nopriv_fetch_experience_price_list', 'fetch_experience_price_list');
+
+
+
+
+function store_activity_tab_data() {
+    // Validate session_id
+    if (!isset($_POST['session_id']) || empty($_POST['session_id'])) {
+        wp_send_json_error(['message' => 'Session ID not found.']);
+    }
+
+    $session_id = sanitize_text_field($_POST['session_id']);
+    $transient_key = "contact_details_cartSessionID_" . $session_id;
+
+    // Retrieve existing stored data
+    $existing_data = get_transient($transient_key) ?: [];
+
+    // Check for activityTabData
+    if (isset($_POST['activityTabData'])) {
+        $activity_data = json_decode(stripslashes($_POST['activityTabData']), true);
+        if (!is_array($activity_data)) {
+            wp_send_json_error(['message' => 'Invalid activityTabData format.']);
+        }
+        // Merge with existing activityTabData
+        $existing_data['activityTabData'] = array_merge_recursive($existing_data['activityTabData'] ?? [], $activity_data);
+    }
+
+    // Check for mainContactDetails
+    if (isset($_POST['mainContactDetails'])) {
+        $main_contact_data = json_decode(stripslashes($_POST['mainContactDetails']), true);
+        if (!is_array($main_contact_data)) {
+            wp_send_json_error(['message' => 'Invalid mainContactDetails format.']);
+        }
+        // Store separately without merging into activityTabData
+        $existing_data['mainContactDetails'] = $main_contact_data;
+    }
+
+    // Save updated data
+    set_transient($transient_key, $existing_data, 3600); // Store for 1 hour
+
+    wp_send_json_success([
+        'message' => 'Data stored successfully',
+        'data' => $existing_data
+    ]);
+
+    wp_die();
+}
+
+add_action('wp_ajax_store_activity_tab_data', 'store_activity_tab_data');
+add_action('wp_ajax_nopriv_store_activity_tab_data', 'store_activity_tab_data');
+
+
+function get_activity_tab_data() {
+    // Check if session_id is provided in the request
+    if (empty($_POST['session_id'])) {
+        wp_send_json_error(['message' => 'Session ID is missing.']);
+    }
+
+    // Sanitize session_id
+    $session_id = sanitize_text_field($_POST['session_id']);
+    $transient_key = "contact_details_cartSessionID_" . $session_id;
+
+    // Retrieve stored activity data
+    $stored_data = get_transient($transient_key) ?: [];
+
+    // Return the data
+    wp_send_json_success(['data' => $stored_data]);
+    wp_die();
+}
+
+// Register the AJAX action for logged-in and non-logged-in users
+add_action('wp_ajax_get_activity_tab_data', 'get_activity_tab_data');
+add_action('wp_ajax_nopriv_get_activity_tab_data', 'get_activity_tab_data');
