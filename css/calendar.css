@@ -466,9 +466,7 @@
     #table-body {
         grid-template-columns: repeat(7, 1fr) !important;
     }
-    .custom-checkout-right-section {
-        padding: 5px !important;
-    }
+    
     .custom-bokun-calendar-cell{
         padding: 8px 4px !important;
     }

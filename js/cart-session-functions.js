@@ -1,6 +1,151 @@
 var MainContactFormData;
 var activityTabData = {};
 jQuery(function ($) {
+  /**
+ * fillActivityTabs() – Walks through the global activityTabData object
+ * and fills in the corresponding tab fields.
+ */
+  function fillActivityTabs() {
+    // Loop over each key in the activityTabData
+    Object.keys(activityTabData).forEach(function (key) {
+      // Expected key format: productId_index (e.g. "930914_0")
+      var keyParts = key.split('_');
+      if (keyParts.length < 2) return; // Skip if key format is unexpected
+
+      var index = keyParts[1];
+      var data = activityTabData[key];
+
+      // Get the tab element (make sure it exists)
+      var tabElement = document.getElementById("experienceStep_" + index);
+      if (!tabElement) return;
+
+      // ============================================
+      // 1. Repopulate Pickup Answer by simulating a click event
+      // ============================================
+      if (data.pickupAnswers && data.pickupAnswers.length > 0) {
+        let pickupTitle = data.pickupAnswers[0].values[0];
+
+        // If the pickup container exists, look for its UL of options
+        const pickupDiv = document.getElementById("pickupDiv_" + index);
+        if (pickupDiv) {
+          const ulElement = document.getElementById(`pickupOptions_${index}`);
+          if (ulElement) {
+            const liElements = ulElement.getElementsByTagName("li");
+            // Loop through each li to find a matching title
+            for (let i = 0; i < liElements.length; i++) {
+              let li = liElements[i];
+              if (li.textContent.trim() === pickupTitle.trim()) {
+                // Simulate a click event on the matching li
+                $(li).trigger("click");
+                break; // Once found, no need to continue the loop.
+              }
+            }
+          }
+        }
+        // Optionally, update the pickup search input (in case the click handler does not set it)
+        const pickupInput = tabElement.querySelector(`#pickupSearch_${index}`);
+        if (pickupInput && pickupTitle) {
+          pickupInput.value = pickupTitle;
+        }
+      }
+
+      // ============================================
+      // 2. Repopulate Drop-off Answer by simulating a click event
+      // ============================================
+      if (data.dropoffAnswers && data.dropoffAnswers.length > 0) {
+        let dropoffTitle = data.dropoffAnswers[0].values[0];
+
+        // If the drop-off container exists, look for its UL of options
+        const dropoffDiv = document.getElementById("dropoffDiv_" + index);
+        if (dropoffDiv) {
+          const ulElement = document.getElementById(`dropoffOptions_${index}`);
+          if (ulElement) {
+            const liElements = ulElement.getElementsByTagName("li");
+            for (let i = 0; i < liElements.length; i++) {
+              let li = liElements[i];
+              if (li.textContent.trim() === dropoffTitle.trim()) {
+                $(li).trigger("click");
+                break;
+              }
+            }
+          }
+        }
+        // Optionally, update the drop-off search input
+        const dropoffInput = tabElement.querySelector(`#dropoffSearch_${index}`);
+        if (dropoffInput && dropoffTitle) {
+          dropoffInput.value = dropoffTitle;
+        }
+      }
+
+      // ============================================
+      // 3. Fill Booking-Level Questions (if any)
+      // ============================================
+      if (data.answers && data.answers.length > 0) {
+        data.answers.forEach(function (answer) {
+          // Look for an input with the matching data-question-id attribute
+          var inputEl = tabElement.querySelector('[data-question-id="' + answer.questionId + '"]');
+          if (inputEl && answer.values.length > 0) {
+            inputEl.value = answer.values[0];
+          }
+        });
+      }
+
+      // ============================================
+      // 4. Fill Passenger Details (if any)
+      // ============================================
+      if (data.passengers && data.passengers.length > 0) {
+        data.passengers.forEach(function (passenger, passengerIndex) {
+          if (passenger.passengerDetails && passenger.passengerDetails.length > 0) {
+            passenger.passengerDetails.forEach(function (detail) {
+              // Build a selector using the data attributes
+              var inputSelector =
+                '[data-pricing-category-id="' + passenger.pricingCategoryId +
+                '"][data-booking-id="' + passenger.bookingId +
+                '"][data-question-id="' + detail.questionId + '"]';
+              var passengerInput = tabElement.querySelector(inputSelector);
+              if (passengerInput && detail.values.length > 0) {
+                passengerInput.value = detail.values[0];
+              }
+            });
+          }
+        });
+      }
+
+      // ============================================
+      // 5. Repopulate Pickup Room Number (if any)
+      // ============================================
+      if (data.pickupRoomNumber && data.pickupRoomNumber.length > 0) {
+        // Assume the room number input is identified as pickupSearch_{index}RoomNumber
+        const pickupRoomInput = tabElement.querySelector(`#pickupSearch_${index}RoomNumber`);
+        if (pickupRoomInput) {
+          pickupRoomInput.value = data.pickupRoomNumber[0].values[0];
+          // Ensure the room number container is visible
+          const pickupRoomContainer = document.getElementById(`pickupSearch_${index}RoomNumberContainer`);
+          if (pickupRoomContainer) {
+            pickupRoomContainer.style.display = "block";
+          }
+        }
+      }
+
+      // ============================================
+      // 6. Repopulate Drop-off Room Number (if any)
+      // ============================================
+      if (data.dropoffRoomNumber && data.dropoffRoomNumber.length > 0) {
+        const dropoffRoomInput = tabElement.querySelector(`#dropoffSearch_${index}RoomNumber`);
+        if (dropoffRoomInput) {
+          dropoffRoomInput.value = data.dropoffRoomNumber[0].values[0];
+          // Ensure the room number container is visible
+          const dropoffRoomContainer = document.getElementById(`dropoffSearch_${index}RoomNumberContainer`);
+          if (dropoffRoomContainer) {
+            dropoffRoomContainer.style.display = "block";
+          }
+        }
+      }
+    });
+  }
+
+
+
   function fillForm(moveNext = false) {
     console.log("fill form function called");
     if (!MainContactFormData) {
@@ -200,8 +345,7 @@ jQuery(function ($) {
           $("body").css("overflow", "hidden");
           handleExtras(cartResponse);
         }
-
-
+        fillActivityTabs();
 
       } else {
         console.error("Add to cart failed.", cartResponse);
@@ -733,7 +877,23 @@ jQuery(function ($) {
 `;
     rightSection.html(rightSectionContent);
     $("#confirmButton").text(`Reserve and Pay Now ${localStorage.getItem("currency")} ${cartResponse.data.totalPrice}`);
+    $(".custom-checkout-right-section").prepend(`
+      <div class="custom-checkout-order-summary">
+          <span>Order Summary <span class="summary-price">${checkoutOptionsResponse.data.options[0].formattedAmount}</span></span>
+          <button class="custom-checkout-toggle-summary">▼</button>
+      </div>
+  `);
 
+    // Toggle Right Section and Smoothly Show Promo Box
+    $(".custom-checkout-order-summary").on("click", function () {
+      $(".custom-checkout-right-section").toggleClass("active");
+
+      if ($(".custom-checkout-right-section").hasClass("active")) {
+        $(".custom-checkout-promo-box").fadeIn(300);
+      } else {
+        $(".custom-checkout-promo-box").fadeOut(300);
+      }
+    });
     const showMoreLinks = document.querySelectorAll(
       ".custom-checkout-promo-showmore"
     );
@@ -975,32 +1135,28 @@ jQuery(function ($) {
             );
 
           return ` 
-    <div class="custom-checkout-step" data-step="${index + 2
-            }" id="experienceStep_${index}" style="display: none;">
+    <div class="custom-checkout-step" data-step="${index + 2}" id="experienceStep_${index}" style="display: none;">
           <h2 class="custom-checkout-section-title">Complete your booking</h2>
         <div class="custom-checkout-divider"></div>
-      <div class="custom-checkout-booking-card" data-product-booking-id="${experience.productBookingId
-            }">
+      <div class="custom-checkout-booking-card" data-product-booking-id="${experience.productBookingId}">
         <img src="${experience.product.keyPhoto?.originalUrl ||
-            "assets/img/default-tour-image.jpg"
-            }" alt="${experience.product.title
-            }" class="custom-checkout-booking-image">
+            "assets/img/default-tour-image.jpg"}" alt="${experience.product.title}" class="custom-checkout-booking-image">
         <div class="custom-checkout-booking-details">
-          <h3 class="custom-checkout-booking-title">${experience.product.title
-            }</h3>
+          <h3 class="custom-checkout-booking-title">${experience.product.title}</h3>
           <div class="custom-checkout-booking-info">
-            <p><strong>Travellers</strong><br>${experience.lineItems[0].people
-            } Passengers</p>
+            <p><strong>Travellers</strong><br>${experience.lineItems[0].people} Passengers</p>
             <p><strong>Departure</strong><br>${experience.dates} Passengers</p>
           </div>
         </div>
       </div>
-      <div class="custom-checkout-booking-summary" id="addExpSection">
-         <h2 class="custom-checkout-section-title">Add to your experience</h2>
-        <div class="custom-checkout-divider"></div>
-      </div>
-        <div class="custom-checkout-pickup-dropoff" id="custom-checkout-pickup-dropoff_${index}">
-            <!-- Pick-up Section -->
+     
+      <div class="custom-checkout-pickup-dropoff" id="custom-checkout-pickup-dropoff_${index}">
+        <div class="custom-checkout-booking-summary" id="addExpSection">
+          <h2 class="custom-checkout-section-title">Add to your experience</h2>
+          <div class="custom-checkout-divider"></div>
+        </div>    
+      <div class="custom-checkout-pickup-dropoff-section">
+          <!-- Pick-up Section -->
             <div class="custom-pickup-section">
                  <h3 class="custom-pickup-title">
                     Pick-up <span class="custom-included-label">Included in price</span>
@@ -1008,8 +1164,7 @@ jQuery(function ($) {
                 <div class="custom-form-group" id="pickupDiv_${index}">
                     <!-- Dynamic dropdown content will be rendered here by JavaScript -->
                 </div>
-                <span id="pickupAttention_${index}" data-time-id="${experience.dates
-            }"></span>
+                <span id="pickupAttention_${index}" data-time-id="${experience.dates}"></span>
                 <div class="custom-form-group customPickupDiv_${index}" style="margin-top: 15px !important;">
                     <label class="custom-form-label" for="pickupAddress">Where should we pick you up? *</label>
                     <input type="text" class="custom-form-input" id="pickupAddress" placeholder="Enter pick-up location" />
@@ -1029,7 +1184,8 @@ jQuery(function ($) {
                     <input type="text" class="custom-form-input" id="dropoffAddress" placeholder="Enter drop-off location"  />
                 </div>
             </div>
-       </div>
+         </div>
+      </div>
       <div id="bookableExtras_${index}" data-activity-id="${experience.product.id}"></div>
           <div id="ParticipantFormData_${index}">
          
@@ -1164,10 +1320,11 @@ jQuery(function ($) {
       }" style="display: none;">
         <h2 class="custom-checkout-step-4-title">You're booking</h2>
         <div class="custom-checkout-step-4-divider"></div>
+             <div class="custom-checkout-step-4-booking-summary">
         ${checkoutExperience
         .map(
           (experience) => `
-          <div class="custom-checkout-step-4-booking-summary">
+     
             <div class="custom-checkout-step-4-booking-card">
               <img src="${experience.product.keyPhoto.originalUrl}" alt="${experience.product.title
             }" class="custom-checkout-step-4-image">
@@ -1182,10 +1339,11 @@ jQuery(function ($) {
                 </div>
               </div>
             </div>
-          </div>
+          
         `
         )
         .join("")}
+        </div>
         <div class="custom-checkout-promo-code" id="HidePromoCode">
            <label for="promo">Promo Code</label>
            <div class="custom-checkout-promo-input">
@@ -1381,11 +1539,11 @@ jQuery(function ($) {
       const $container = $(`#${containerId}`);
       $container.html(`
         <input type="text" id="${inputId}" class="custom-form-input" placeholder="${placeholder}" required/>
-        <ul id="${optionsId}" class="custom-dropdown-options">
+        <ul id="${optionsId}"  class="custom-dropdown-options">
           ${options
           .map(
             (option) => `
-                <li class="custom-pickup-list" data-id="${option.id}" data-room-status="${option.askForRoomNumber}">${option.title}</li>
+                <li class="custom-pickup-list" data-title="${option.title}" data-id="${option.id}" data-room-status="${option.askForRoomNumber}">${option.title}</li>
               `
           )
           .join("")}
@@ -1523,7 +1681,7 @@ jQuery(function ($) {
 
         if (!hasPickup && !hasDropoff) {
           $(parentPickupDropoffDiv).remove();
-          $("#addExpSection").remove();
+          // $("#addExpSection").remove();
         }
 
         $(`#continueToStep${index + 3}`).on("click", function () {
@@ -1741,7 +1899,7 @@ jQuery(function ($) {
     };
 
     console.log("Final Shopping Cart:", shoppingCart);
-
+    return;
     $.ajax({
       url: bokunAjax.ajaxUrl,
       method: "POST",

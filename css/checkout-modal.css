@@ -812,10 +812,15 @@
     object-fit: contain !important;
 }
 .custom-checkout-pickup-dropoff {
+    /* display: flex !important;
+    justify-content: space-between !important;
+    gap: 20px !important; */
+    margin-bottom: 20px !important;
+}
+.custom-checkout-pickup-dropoff-section{
     display: flex !important;
     justify-content: space-between !important;
     gap: 20px !important;
-    margin-bottom: 20px !important;
 }
 .custom-pickup-section,
 .custom-dropoff-section {
@@ -1119,10 +1124,10 @@
     .custom-checkout-main-container {
         flex-direction: column !important;
     }
-    .custom-checkout-right-section {
+    /* .custom-checkout-right-section {
         display: none !important;
-        /* Hide right section if needed */
-    }
+       
+    } */
     .custom-checkout-continue-btn,
     .custom-checkout-step-4-button-container {
         width: 100% !important;
@@ -1153,6 +1158,9 @@
     }
     .custom-checkout-footer-powered {
         margin-top: 10px !important;
+    }
+    .custom-checkout-right-section {
+        padding: 5px !important;
     }
     .custom-checkout-pickup-dropoff {
         display: grid !important;
@@ -1235,3 +1243,69 @@
 .custom-traveller-checkboxes label:hover {
     background-color: #6363632b;
 }
+
+@media (max-width: 768px) {
+    /* Make right section fixed at the bottom */
+    .custom-checkout-right-section {
+       
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        background: #fff !important;
+        z-index: 1000 !important;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1) !important;
+        border-top: 1px solid #ddd !important;
+        transition: max-height 0.3s ease-in-out !important;
+        max-height: 60px !important; /* Default collapsed height */
+        overflow: hidden !important;
+    }
+
+    /* Order Summary button at bottom */
+    .custom-checkout-order-summary {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 15px !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+        background: white !important;
+        border-top: 1px solid #ddd !important;
+    }
+
+    /* Expand Upwards */
+    .custom-checkout-right-section.active {
+        max-height: 80vh !important; /* Expand upwards smoothly */
+        overflow-y: auto !important;
+    }
+
+    /* Hide the promo box initially */
+    .custom-checkout-promo-box {
+        display: none !important;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    /* When active, show promo box smoothly */
+    .custom-checkout-right-section.active .custom-checkout-promo-box {
+        display: block !important;
+        opacity: 1;
+    }
+
+    /* Rotate icon when expanded */
+    .custom-checkout-toggle-summary {
+        transition: transform 0.3s ease-in-out !important;
+    }
+    .custom-checkout-right-section.active .custom-checkout-toggle-summary {
+        transform: rotate(180deg) !important;
+    }
+    .custom-checkout-toggle-summary{
+        background-color: #0056B3 !important;
+        padding: 3px 10px !important;
+    }
+}
+
+.custom-checkout-order-summary{
+    display: none ;
+}
+
+

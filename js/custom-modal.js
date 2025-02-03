@@ -1354,7 +1354,7 @@ jQuery(document).ready(function ($) {
             };
             // API Call
             const triggerApiCall = () => {
-              if (isLoading) return;
+              //if (isLoading) return;
               isLoading = true;
               const start_date = `${currentYear}-${String(
                 currentMonth + 1
@@ -1383,6 +1383,9 @@ jQuery(document).ready(function ($) {
                 success: (response) => {
                   triggerApiCallResponse = response;
                   updateCalendar(triggerApiCallResponse);
+                  if(response?.success === false){
+                    callForNextMonth();
+                  }
                 },
                 error: () => {
                   tableBody.innerHTML =
@@ -1394,6 +1397,20 @@ jQuery(document).ready(function ($) {
                 },
               });
             };
+            function callForNextMonth(){
+              console.log("callForNextMonth function called");
+
+              if (isLoading || (currentMonth === 11 && currentYear === today.getFullYear() + 1)) {
+                  console.warn("Stopping next month call: already loading or reached the max year.");
+                  // return;
+              }
+              currentMonth = (currentMonth + 1) % 12;
+              if (currentMonth === 0) currentYear++;
+          
+              console.log(`Fetching data for next month: ${currentMonth + 1}/${currentYear}`);
+              triggerApiCall();
+          }
+          
             // Navigation Buttons
             const updateNavigationButtons = () => {
               const prevButton = document.getElementById("prev-month");
