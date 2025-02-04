@@ -1,41 +1,41 @@
 
-var activityTabData = {};
+var activityTabData = [];
 var mainContactDetails = {};
 var checkoutTabData = {};// dont change this 
 jQuery(function ($) {
 
 
 
-    function getStoredData() {
-      const sessionId = getOrCreateSessionId();
-      if (!sessionId) {
-          console.error("❌ Invalid session ID.");
-          return;
+  function getStoredData() {
+    const sessionId = getOrCreateSessionId();
+    if (!sessionId) {
+      console.error("❌ Invalid session ID.");
+      return;
+    }
+
+    $.ajax({
+      url: bokunAjax.ajaxUrl,
+      method: "POST",
+      data: {
+        action: "get_stored_data",
+        session_id: sessionId,
+      },
+      dataType: "json",
+      success: function (response) {
+        if (response.success && response.data) {
+          activityTabData = response.data.activityTabData || {}; // Restore activity data
+          mainContactDetails = response.data.mainContactDetails || {}; // Restore contact details
+
+          console.log("✅ Retrieved stored activityTabData:", activityTabData);
+          console.log("✅ Retrieved stored mainContactDetails:", mainContactDetails);
+        } else {
+          console.warn("⚠️ No stored data found.");
+        }
+      },
+      error: function () {
+        console.error("❌ Error retrieving stored data.");
       }
-
-      $.ajax({
-          url: bokunAjax.ajaxUrl,
-          method: "POST",
-          data: {
-              action: "get_stored_data",
-              session_id: sessionId,
-          },
-          dataType: "json",
-          success: function (response) {
-              if (response.success && response.data) {
-                  activityTabData = response.data.activityTabData || {}; // Restore activity data
-                  mainContactDetails = response.data.mainContactDetails || {}; // Restore contact details
-
-                  console.log("✅ Retrieved stored activityTabData:", activityTabData);
-                  console.log("✅ Retrieved stored mainContactDetails:", mainContactDetails);
-              } else {
-                  console.warn("⚠️ No stored data found.");
-              }
-          },
-          error: function () {
-              console.error("❌ Error retrieving stored data.");
-          }
-      });
+    });
   }
 
 
@@ -49,170 +49,176 @@ jQuery(function ($) {
     }
 
     console.log("🔄 Storing activityTabData:", activityTabData);
+    console.log("📌 Type of activityTabData:", typeof activityTabData);
 
+    
+
+    // Make AJAX request
     $.ajax({
         url: bokunAjax.ajaxUrl,
         method: "POST",
         data: {
             action: "store_activity_tab_data",
             session_id: sessionId,
-            activityTabData: JSON.stringify(activityTabData), // Send object as JSON
+            activityTabData: JSON.stringify(activityTabData), // Send as JSON string
         },
         dataType: "json",
         success: function (response) {
-            console.log("✅ Stored activityTabData:", response.data);
+            console.log("✅ Successfully stored activityTabData:", response.data);
         },
         error: function (jqXHR, textStatus, errorThrown) {
             console.error(`❌ Failed to store activity data: ${textStatus}, ${errorThrown}`);
+            console.error("📌 Response Text:", jqXHR.responseText);
         },
     });
 }
 
 
-function fillActivityTabs() {
-  // Get all elements that represent activity steps
-  document.querySelectorAll(".custom-checkout-step").forEach((tabElement) => {
-    let activityKey = tabElement.getAttribute("data-index"); // Get `data-index` attribute
 
-    if (!activityKey || !activityTabData.hasOwnProperty(activityKey)) return;
+  function fillActivityTabs() {
+    // Get all elements that represent activity steps
+    document.querySelectorAll(".custom-checkout-step").forEach((tabElement) => {
+      let activityKey = tabElement.getAttribute("data-index"); // Get `data-index` attribute
 
-    let data = activityTabData[activityKey];
-    let keyParts = activityKey.split("_");
-    let activityId = keyParts[0]; // Extract Activity ID
-    let index = keyParts[1]; // Extract index
+      if (!activityKey || !activityTabData.hasOwnProperty(activityKey)) return;
 
-    console.log(`🔄 Populating data for Activity ${activityKey}`);
+      let data = activityTabData[activityKey];
+      let keyParts = activityKey.split("_");
+      let activityId = keyParts[0]; // Extract Activity ID
+      let index = keyParts[1]; // Extract index
 
-    if (data.pickupAnswers && data.pickupAnswers.length > 0) {
-      let pickupTitle = data.pickupAnswers[0].values[0];
-    
-      const pickupUl = document.getElementById(`pickupOptions_${index}`);
-      if (pickupUl) {
-        let matchedLi = Array.from(pickupUl.getElementsByTagName("li")).find(
-          (li) => li.textContent.trim() === pickupTitle.trim()
-        );
-    
-        if (matchedLi) {
-          $(matchedLi).trigger("click"); // Trigger click event
-          $(matchedLi).addClass("selected"); // Ensure the class is set
-          $(matchedLi).parent().removeClass("show"); // Hide dropdown after selection
+      console.log(`🔄 Populating data for Activity ${activityKey}`);
+
+      if (data.pickupAnswers && data.pickupAnswers.length > 0) {
+        let pickupTitle = data.pickupAnswers[0].values[0];
+
+        const pickupUl = document.getElementById(`pickupOptions_${index}`);
+        if (pickupUl) {
+          let matchedLi = Array.from(pickupUl.getElementsByTagName("li")).find(
+            (li) => li.textContent.trim() === pickupTitle.trim()
+          );
+
+          if (matchedLi) {
+            $(matchedLi).trigger("click"); // Trigger click event
+            $(matchedLi).addClass("selected"); // Ensure the class is set
+            $(matchedLi).parent().removeClass("show"); // Hide dropdown after selection
+          }
         }
+
+        const pickupInput = document.getElementById(`pickupSearch_${index}`);
+        if (pickupInput) {
+          pickupInput.value = pickupTitle;
+        }
+
+        // Ensure room number visibility is updated
+        setTimeout(() => {
+          const $roomNumberContainer = $(`#pickupSearch_${index}RoomNumberContainer`);
+          const $roomNumberInput = $(`#pickupSearch_${index}RoomNumber`);
+          const $whereInput = $(`.customPickupDiv_${index}`);
+          const askForRoom = $(`#pickupOptions_${index} li.selected`).data("room-status");
+
+          if (askForRoom !== undefined) {
+            $roomNumberContainer.toggle(askForRoom === true);
+            $whereInput.toggle(askForRoom !== true);
+          }
+
+          if (askForRoom && data.pickRoomNumber) {
+            $roomNumberInput.val(data.pickRoomNumber); // Set room number field value
+          }
+
+          $whereInput.hide();
+        }, 200);
       }
-    
-      const pickupInput = document.getElementById(`pickupSearch_${index}`);
-      if (pickupInput) {
-        pickupInput.value = pickupTitle;
+
+      if (data.dropoffAnswers && data.dropoffAnswers.length > 0) {
+        let dropoffTitle = data.dropoffAnswers[0].values[0];
+
+        const dropoffUl = document.getElementById(`dropoffOptions_${index}`);
+        if (dropoffUl) {
+          let matchedLi = Array.from(dropoffUl.getElementsByTagName("li")).find(
+            (li) => li.textContent.trim() === dropoffTitle.trim()
+          );
+
+          if (matchedLi) {
+            $(matchedLi).trigger("click"); // Trigger click event
+            $(matchedLi).addClass("selected"); // Ensure the class is set
+            $(matchedLi).parent().removeClass("show"); // Hide dropdown after selection
+          }
+        }
+
+        const dropoffInput = document.getElementById(`dropoffSearch_${index}`);
+        if (dropoffInput) {
+          dropoffInput.value = dropoffTitle;
+        }
+
+        // Ensure room number visibility is updated
+        setTimeout(() => {
+          const $roomNumberContainer = $(`#dropoffSearch_${index}RoomNumberContainer`);
+          const $roomNumberInput = $(`#dropoffSearch_${index}RoomNumber`);
+          const $whereInput = $(`.customDropoffDiv_${index}`);
+          const askForRoom = $(`#dropoffOptions_${index} li.selected`).data("room-status");
+
+          if (askForRoom !== undefined) {
+            $roomNumberContainer.toggle(askForRoom === true);
+            $whereInput.toggle(askForRoom !== true);
+          }
+
+          if (askForRoom && data.dropoffRoomNumber) {
+            $roomNumberInput.val(data.dropoffRoomNumber); // Set room number field value
+          }
+
+          $whereInput.hide();
+        }, 200);
       }
-    
-      // Ensure room number visibility is updated
-      setTimeout(() => {
-        const $roomNumberContainer = $(`#pickupSearch_${index}RoomNumberContainer`);
-        const $roomNumberInput = $(`#pickupSearch_${index}RoomNumber`);
-        const $whereInput = $(`.customPickupDiv_${index}`);
-        const askForRoom = $(`#pickupOptions_${index} li.selected`).data("room-status");
-    
-        if (askForRoom !== undefined) {
-          $roomNumberContainer.toggle(askForRoom === true);
-          $whereInput.toggle(askForRoom !== true);
-        }
-    
-        if (askForRoom && data.pickRoomNumber) {
-          $roomNumberInput.val(data.pickRoomNumber); // Set room number field value
-        }
-    
-        $whereInput.hide();
-      }, 200);
-    }
-    
-    if (data.dropoffAnswers && data.dropoffAnswers.length > 0) {
-      let dropoffTitle = data.dropoffAnswers[0].values[0];
-    
-      const dropoffUl = document.getElementById(`dropoffOptions_${index}`);
-      if (dropoffUl) {
-        let matchedLi = Array.from(dropoffUl.getElementsByTagName("li")).find(
-          (li) => li.textContent.trim() === dropoffTitle.trim()
-        );
-    
-        if (matchedLi) {
-          $(matchedLi).trigger("click"); // Trigger click event
-          $(matchedLi).addClass("selected"); // Ensure the class is set
-          $(matchedLi).parent().removeClass("show"); // Hide dropdown after selection
-        }
+
+
+
+      if (data.answers && data.answers.length > 0) {
+        data.answers.forEach(function (answer) {
+          var inputEl = tabElement.querySelector(`[data-question-id="${answer.questionId}"]`);
+          if (inputEl && answer.values.length > 0) {
+            inputEl.value = answer.values[0];
+          }
+        });
       }
-    
-      const dropoffInput = document.getElementById(`dropoffSearch_${index}`);
-      if (dropoffInput) {
-        dropoffInput.value = dropoffTitle;
+
+      if (data.passengers && data.passengers.length > 0) {
+        data.passengers.forEach(function (passenger, passengerIndex) {
+          if (passenger.passengerDetails && passenger.passengerDetails.length > 0) {
+            passenger.passengerDetails.forEach(function (detail) {
+              var inputSelector = `[data-pricing-category-id="${passenger.pricingCategoryId}"][data-booking-id="${passenger.bookingId}"][data-question-id="${detail.questionId}"]`;
+              var passengerInput = tabElement.querySelector(inputSelector);
+              if (passengerInput && detail.values.length > 0) {
+                passengerInput.value = detail.values[0];
+              }
+            });
+          }
+        });
       }
-    
-      // Ensure room number visibility is updated
-      setTimeout(() => {
-        const $roomNumberContainer = $(`#dropoffSearch_${index}RoomNumberContainer`);
-        const $roomNumberInput = $(`#dropoffSearch_${index}RoomNumber`);
-        const $whereInput = $(`.customDropoffDiv_${index}`);
-        const askForRoom = $(`#dropoffOptions_${index} li.selected`).data("room-status");
-    
-        if (askForRoom !== undefined) {
-          $roomNumberContainer.toggle(askForRoom === true);
-          $whereInput.toggle(askForRoom !== true);
-        }
-    
-        if (askForRoom && data.dropoffRoomNumber) {
-          $roomNumberInput.val(data.dropoffRoomNumber); // Set room number field value
-        }
-    
-        $whereInput.hide();
-      }, 200);
-    }
-    
-    
 
-    if (data.answers && data.answers.length > 0) {
-      data.answers.forEach(function (answer) {
-        var inputEl = tabElement.querySelector(`[data-question-id="${answer.questionId}"]`);
-        if (inputEl && answer.values.length > 0) {
-          inputEl.value = answer.values[0];
-        }
-      });
-    }
+      // if (data.pickupRoomNumber && data.pickupRoomNumber.length > 0) {
+      //   const pickupRoomInput = tabElement.querySelector(`#pickupSearch_${index}RoomNumber`);
+      //   if (pickupRoomInput) {
+      //     pickupRoomInput.value = data.pickupRoomNumber[0].values[0];
+      //     const pickupRoomContainer = document.getElementById(`pickupSearch_${index}RoomNumberContainer`);
+      //     if (pickupRoomContainer) {
+      //       pickupRoomContainer.style.display = "block";
+      //     }
+      //   }
+      // }
 
-    if (data.passengers && data.passengers.length > 0) {
-      data.passengers.forEach(function (passenger, passengerIndex) {
-        if (passenger.passengerDetails && passenger.passengerDetails.length > 0) {
-          passenger.passengerDetails.forEach(function (detail) {
-            var inputSelector = `[data-pricing-category-id="${passenger.pricingCategoryId}"][data-booking-id="${passenger.bookingId}"][data-question-id="${detail.questionId}"]`;
-            var passengerInput = tabElement.querySelector(inputSelector);
-            if (passengerInput && detail.values.length > 0) {
-              passengerInput.value = detail.values[0];
-            }
-          });
-        }
-      });
-    }
-
-    // if (data.pickupRoomNumber && data.pickupRoomNumber.length > 0) {
-    //   const pickupRoomInput = tabElement.querySelector(`#pickupSearch_${index}RoomNumber`);
-    //   if (pickupRoomInput) {
-    //     pickupRoomInput.value = data.pickupRoomNumber[0].values[0];
-    //     const pickupRoomContainer = document.getElementById(`pickupSearch_${index}RoomNumberContainer`);
-    //     if (pickupRoomContainer) {
-    //       pickupRoomContainer.style.display = "block";
-    //     }
-    //   }
-    // }
-
-    // if (data.dropoffRoomNumber && data.dropoffRoomNumber.length > 0) {
-    //   const dropoffRoomInput = tabElement.querySelector(`#dropoffSearch_${index}RoomNumber`);
-    //   if (dropoffRoomInput) {
-    //     dropoffRoomInput.value = data.dropoffRoomNumber[0].values[0];
-    //     const dropoffRoomContainer = document.getElementById(`dropoffSearch_${index}RoomNumberContainer`);
-    //     if (dropoffRoomContainer) {
-    //       dropoffRoomContainer.style.display = "block";
-    //     }
-    //   }
-    // }
-  });
-}
+      // if (data.dropoffRoomNumber && data.dropoffRoomNumber.length > 0) {
+      //   const dropoffRoomInput = tabElement.querySelector(`#dropoffSearch_${index}RoomNumber`);
+      //   if (dropoffRoomInput) {
+      //     dropoffRoomInput.value = data.dropoffRoomNumber[0].values[0];
+      //     const dropoffRoomContainer = document.getElementById(`dropoffSearch_${index}RoomNumberContainer`);
+      //     if (dropoffRoomContainer) {
+      //       dropoffRoomContainer.style.display = "block";
+      //     }
+      //   }
+      // }
+    });
+  }
 
 
   function fillForm(moveNext = false) {
@@ -1606,7 +1612,7 @@ function fillActivityTabs() {
       console.log("Main contact details do not exist");
     }
     const pickupPlaces = pickupPlacesResponse?.data?.pickupPlaces || [];
-  
+
     function initializeDropdowns(
       containerId,
       inputId,
@@ -1764,53 +1770,53 @@ function fillActivityTabs() {
         }
         $(`#continueToStep${index + 3}`).on("click", function () {
           const activityIdIndexKey = `${experience.product.id}_${index}`;
-    
+
           // ✅ Extract Data
           const activityAnswers = hasActivityQuestions
             ? questions
-                .map((question) => {
-                  const inputId = `${question.questionId}_${index}`;
-                  const inputValue = $(`#${inputId}`).val()?.trim() || "";
-                  return inputValue ? { questionId: question.questionId, values: [inputValue] } : null;
-                })
-                .filter(Boolean)
+              .map((question) => {
+                const inputId = `${question.questionId}_${index}`;
+                const inputValue = $(`#${inputId}`).val()?.trim() || "";
+                return inputValue ? { questionId: question.questionId, values: [inputValue] } : null;
+              })
+              .filter(Boolean)
             : undefined;
-    
+
           const pickupAnswers =
-            hasPickup && $(`#pickupSearch_${index}`).val()?.trim()
+            $(`#pickupSearch_${index}`).val()?.trim()
               ? [{ questionId: "pickupPlaceDescription", values: [$(`#pickupSearch_${index}`).val().trim()] }]
               : undefined;
-    
+
           const dropoffAnswers =
-            hasDropoff && $(`#dropoffSearch_${index}`).val()?.trim()
+             $(`#dropoffSearch_${index}`).val()?.trim()
               ? [{ questionId: "dropoffPlaceDescription", values: [$(`#dropoffSearch_${index}`).val().trim()] }]
               : undefined;
-    
+
           // ✅ Get room number values **only if required**
-         const pickupRoomNumberInput = $(`#pickupSearch_${index}RoomNumber`).val()?.trim();
-         const dropoffRoomNumberInput = $(`#dropoffSearch_${index}RoomNumber`).val()?.trim();
-         const askForPickupRoom = Boolean($(`#pickupOptions_${index} li.selected`).attr("data-room-status"));
-         const askForDropoffRoom = Boolean($(`#dropoffOptions_${index} li.selected`).attr("data-room-status"));
-         
-    
+          const pickupRoomNumberInput = $(`#pickupSearch_${index}RoomNumber`).val()?.trim();
+          const dropoffRoomNumberInput = $(`#dropoffSearch_${index}RoomNumber`).val()?.trim();
+          const askForPickupRoom = Boolean($(`#pickupOptions_${index} li.selected`).attr("data-room-status"));
+          const askForDropoffRoom = Boolean($(`#dropoffOptions_${index} li.selected`).attr("data-room-status"));
+
+
           const processedPassengers = hasPassengers
             ? passengers.map((passenger, passengerIndex) => {
-                const passengerDetails = passenger.passengerDetails
-                  .map((detail) => {
-                    const inputId = `${detail.questionId}_${index}_${passengerIndex}`;
-                    const inputValue = $(`#${inputId}`).val()?.trim() || "";
-                    return inputValue ? { questionId: detail.questionId, values: [inputValue] } : null;
-                  })
-                  .filter(Boolean);
-    
-                return {
-                  pricingCategoryId: passenger.pricingCategoryId,
-                  bookingId: passenger.bookingId,
-                  ...(passengerDetails.length > 0 && { passengerDetails }),
-                };
-              })
+              const passengerDetails = passenger.passengerDetails
+                .map((detail) => {
+                  const inputId = `${detail.questionId}_${index}_${passengerIndex}`;
+                  const inputValue = $(`#${inputId}`).val()?.trim() || "";
+                  return inputValue ? { questionId: detail.questionId, values: [inputValue] } : null;
+                })
+                .filter(Boolean);
+
+              return {
+                pricingCategoryId: passenger.pricingCategoryId,
+                bookingId: passenger.bookingId,
+                ...(passengerDetails.length > 0 && { passengerDetails }),
+              };
+            })
             : undefined;
-    
+
           // ✅ Store activity data
           if (!activityTabData) {
             activityTabData = {}; // Ensure object is initialized
@@ -1823,7 +1829,7 @@ function fillActivityTabs() {
             ...(askForDropoffRoom && dropoffRoomNumberInput && { dropoffRoomNumber: dropoffRoomNumberInput }), // Store only if required
             ...(processedPassengers && { passengers: processedPassengers }),
           };
-    
+
           if (!checkoutTabData) {
             checkoutTabData = {}; // Ensure object is initialized
           }
@@ -1985,7 +1991,7 @@ function fillActivityTabs() {
     };
 
     console.log("Final Shopping Cart:", shoppingCart);
-    return;
+    // return;
     $.ajax({
       url: bokunAjax.ajaxUrl,
       method: "POST",

@@ -536,15 +536,23 @@ add_action('wp_ajax_nopriv_get_stored_data', 'get_stored_data');
 
 function store_activity_tab_data() {
     $session_id = sanitize_text_field($_POST['session_id'] ?? '');
+    $activity_data = json_decode(wp_unslash($_POST['activityTabData'] ?? '[]'), true);
+
     if (empty($session_id)) {
-        wp_send_json_error(['message' => 'Session ID is required.']);
+        wp_send_json_error(['message' => '❌ Session ID is required.']);
+    }
+
+    if (!is_array($activity_data) || empty($activity_data)) {
+        wp_send_json_error(['message' => '⚠️ No valid activity data received.']);
     }
 
     $transient_key = "tab_data_cartSessionID_" . $session_id;
-    $activity_data = json_decode(wp_unslash($_POST['activityTabData']), true);
     set_transient($transient_key, ['activityTabData' => $activity_data], HOUR_IN_SECONDS);
 
-    wp_send_json_success(['activityTabData' => $activity_data]);
+    wp_send_json_success([
+        'message' => '✅ Activity data stored successfully.',
+        'activityTabData' => $activity_data
+    ]);
 }
 
 add_action('wp_ajax_store_activity_tab_data', 'store_activity_tab_data');
