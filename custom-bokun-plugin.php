@@ -509,74 +509,71 @@ function fetch_experience_price_list() {
 add_action('wp_ajax_fetch_experience_price_list', 'fetch_experience_price_list');
 add_action('wp_ajax_nopriv_fetch_experience_price_list', 'fetch_experience_price_list');
 
-
-
-
-function store_activity_tab_data() {
-    // Validate session_id
+function get_stored_data() {
     if (!isset($_POST['session_id']) || empty($_POST['session_id'])) {
         wp_send_json_error(['message' => 'Session ID not found.']);
     }
 
     $session_id = sanitize_text_field($_POST['session_id']);
-    $transient_key = "contact_details_cartSessionID_" . $session_id;
+    
+    // Fetch both transients
+    $contact_transient_key = "contact_details_cartSessionID_" . $session_id;
+    $tab_transient_key = "tab_data_cartSessionID_" . $session_id;
 
-    // Retrieve existing stored data
-    $existing_data = get_transient($transient_key) ?: [];
-
-    // Check for activityTabData
-    if (isset($_POST['activityTabData'])) {
-        $activity_data = json_decode(stripslashes($_POST['activityTabData']), true);
-        if (!is_array($activity_data)) {
-            wp_send_json_error(['message' => 'Invalid activityTabData format.']);
-        }
-        // Merge with existing activityTabData
-        $existing_data['activityTabData'] = array_merge_recursive($existing_data['activityTabData'] ?? [], $activity_data);
-    }
-
-    // Check for mainContactDetails
-    if (isset($_POST['mainContactDetails'])) {
-        $main_contact_data = json_decode(stripslashes($_POST['mainContactDetails']), true);
-        if (!is_array($main_contact_data)) {
-            wp_send_json_error(['message' => 'Invalid mainContactDetails format.']);
-        }
-        // Store separately without merging into activityTabData
-        $existing_data['mainContactDetails'] = $main_contact_data;
-    }
-
-    // Save updated data
-    set_transient($transient_key, $existing_data, 3600); // Store for 1 hour
+    $stored_contact_data = get_transient($contact_transient_key) ?: [];
+    $stored_tab_data = get_transient($tab_transient_key) ?: [];
 
     wp_send_json_success([
-        'message' => 'Data stored successfully',
-        'data' => $existing_data
+        'activityTabData' => $stored_tab_data['activityTabData'] ?? [],
+        'mainContactDetails' => $stored_contact_data['mainContactDetails'] ?? [],
     ]);
+}
 
-    wp_die();
+add_action('wp_ajax_get_stored_data', 'get_stored_data');
+add_action('wp_ajax_nopriv_get_stored_data', 'get_stored_data');
+
+
+
+function store_activity_tab_data() {
+    $session_id = sanitize_text_field($_POST['session_id'] ?? '');
+    if (empty($session_id)) {
+        wp_send_json_error(['message' => 'Session ID is required.']);
+    }
+
+    $transient_key = "tab_data_cartSessionID_" . $session_id;
+    $activity_data = json_decode(wp_unslash($_POST['activityTabData']), true);
+    set_transient($transient_key, ['activityTabData' => $activity_data], HOUR_IN_SECONDS);
+
+    wp_send_json_success(['activityTabData' => $activity_data]);
 }
 
 add_action('wp_ajax_store_activity_tab_data', 'store_activity_tab_data');
 add_action('wp_ajax_nopriv_store_activity_tab_data', 'store_activity_tab_data');
 
 
-function get_activity_tab_data() {
-    // Check if session_id is provided in the request
-    if (empty($_POST['session_id'])) {
-        wp_send_json_error(['message' => 'Session ID is missing.']);
+
+
+
+function store_main_contact_details() {
+    if (!isset($_POST['session_id']) || empty($_POST['session_id'])) {
+        wp_send_json_error(['message' => 'Session ID not found.']);
     }
 
-    // Sanitize session_id
     $session_id = sanitize_text_field($_POST['session_id']);
     $transient_key = "contact_details_cartSessionID_" . $session_id;
+    $existing_data = get_transient($transient_key) ?: [];
 
-    // Retrieve stored activity data
-    $stored_data = get_transient($transient_key) ?: [];
+    if (isset($_POST['mainContactDetails'])) {
+        $main_contact_data = json_decode(stripslashes($_POST['mainContactDetails']), true);
+        if (!is_array($main_contact_data)) {
+            wp_send_json_error(['message' => 'Invalid mainContactDetails format.']);
+        }
 
-    // Return the data
-    wp_send_json_success(['data' => $stored_data]);
-    wp_die();
+        $existing_data['mainContactDetails'] = $main_contact_data;
+    }
+
+    set_transient($transient_key, $existing_data, 3600);
+    wp_send_json_success(['mainContactDetails' => $existing_data['mainContactDetails']]);
 }
-
-// Register the AJAX action for logged-in and non-logged-in users
-add_action('wp_ajax_get_activity_tab_data', 'get_activity_tab_data');
-add_action('wp_ajax_nopriv_get_activity_tab_data', 'get_activity_tab_data');
+add_action('wp_ajax_store_main_contact_details', 'store_main_contact_details');
+add_action('wp_ajax_nopriv_store_main_contact_details', 'store_main_contact_details');

@@ -1,176 +1,223 @@
-var MainContactFormData;
+
 var activityTabData = {};
-
-
+var mainContactDetails = {};
+var checkoutTabData = {};// dont change this 
 jQuery(function ($) {
-  function getStoredActivityTabData() {
+
+
+
+    function getStoredData() {
+      const sessionId = getOrCreateSessionId();
+      if (!sessionId) {
+          console.error("❌ Invalid session ID.");
+          return;
+      }
+
+      $.ajax({
+          url: bokunAjax.ajaxUrl,
+          method: "POST",
+          data: {
+              action: "get_stored_data",
+              session_id: sessionId,
+          },
+          dataType: "json",
+          success: function (response) {
+              if (response.success && response.data) {
+                  activityTabData = response.data.activityTabData || {}; // Restore activity data
+                  mainContactDetails = response.data.mainContactDetails || {}; // Restore contact details
+
+                  console.log("✅ Retrieved stored activityTabData:", activityTabData);
+                  console.log("✅ Retrieved stored mainContactDetails:", mainContactDetails);
+              } else {
+                  console.warn("⚠️ No stored data found.");
+              }
+          },
+          error: function () {
+              console.error("❌ Error retrieving stored data.");
+          }
+      });
+  }
+
+
+
+  getStoredData();
+  function storeActivityTabData() {
+    const sessionId = getOrCreateSessionId();
+    if (!sessionId) {
+        console.error("❌ Invalid session ID.");
+        return;
+    }
+
+    console.log("🔄 Storing activityTabData:", activityTabData);
+
     $.ajax({
         url: bokunAjax.ajaxUrl,
         method: "POST",
         data: {
-            action: "get_activity_tab_data",
-            session_id: getOrCreateSessionId(),  // Ensure session ID is sent
+            action: "store_activity_tab_data",
+            session_id: sessionId,
+            activityTabData: JSON.stringify(activityTabData), // Send object as JSON
         },
+        dataType: "json",
         success: function (response) {
-            if (response.success && response.data) {
-                activityTabData = response.data.activityTabData;
-                MainContactFormData = response.data.mainContactDetails;
-                console.log("response from get activity tab data" ,response)
-                console.log("Retrieved activityTabData from transient:", activityTabData);
-            } else {
-                console.warn("No stored activity data found.");
-            }
+            console.log("✅ Stored activityTabData:", response.data);
         },
-        error: function () {
-            console.error("Error retrieving activity data.");
-        }
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.error(`❌ Failed to store activity data: ${textStatus}, ${errorThrown}`);
+        },
     });
-  }
-  getStoredActivityTabData();
+}
 
-  function fillActivityTabs() {
-    // Loop over each key in the activityTabData
-    if(activityTabData == null) return;
-    Object.keys(activityTabData).forEach(function (key) {
-      // Expected key format: productId_index (e.g. "930914_0")
-      var keyParts = key.split('_');
-      if (keyParts.length < 2) return; // Skip if key format is unexpected
 
-      var index = keyParts[1];
-      var data = activityTabData[key];
+function fillActivityTabs() {
+  // Get all elements that represent activity steps
+  document.querySelectorAll(".custom-checkout-step").forEach((tabElement) => {
+    let activityKey = tabElement.getAttribute("data-index"); // Get `data-index` attribute
 
-      // Get the tab element (make sure it exists)
-      var tabElement = document.getElementById("experienceStep_" + index);
-      if (!tabElement) return;
+    if (!activityKey || !activityTabData.hasOwnProperty(activityKey)) return;
 
-      // ============================================
-      // 1. Repopulate Pickup Answer by simulating a click event
-      // ============================================
-      if (data.pickupAnswers && data.pickupAnswers.length > 0) {
-        let pickupTitle = data.pickupAnswers[0].values[0];
+    let data = activityTabData[activityKey];
+    let keyParts = activityKey.split("_");
+    let activityId = keyParts[0]; // Extract Activity ID
+    let index = keyParts[1]; // Extract index
 
-        // If the pickup container exists, look for its UL of options
-        const pickupDiv = document.getElementById("pickupDiv_" + index);
-        if (pickupDiv) {
-          const ulElement = document.getElementById(`pickupOptions_${index}`);
-          if (ulElement) {
-            const liElements = ulElement.getElementsByTagName("li");
-            // Loop through each li to find a matching title
-            for (let i = 0; i < liElements.length; i++) {
-              let li = liElements[i];
-              if (li.textContent.trim() === pickupTitle.trim()) {
-                // Simulate a click event on the matching li
-                $(li).trigger("click");
-                break; // Once found, no need to continue the loop.
-              }
+    console.log(`🔄 Populating data for Activity ${activityKey}`);
+
+    if (data.pickupAnswers && data.pickupAnswers.length > 0) {
+      let pickupTitle = data.pickupAnswers[0].values[0];
+    
+      const pickupUl = document.getElementById(`pickupOptions_${index}`);
+      if (pickupUl) {
+        let matchedLi = Array.from(pickupUl.getElementsByTagName("li")).find(
+          (li) => li.textContent.trim() === pickupTitle.trim()
+        );
+    
+        if (matchedLi) {
+          $(matchedLi).trigger("click"); // Trigger click event
+          $(matchedLi).addClass("selected"); // Ensure the class is set
+          $(matchedLi).parent().removeClass("show"); // Hide dropdown after selection
+        }
+      }
+    
+      const pickupInput = document.getElementById(`pickupSearch_${index}`);
+      if (pickupInput) {
+        pickupInput.value = pickupTitle;
+      }
+    
+      // Ensure room number visibility is updated
+      setTimeout(() => {
+        const $roomNumberContainer = $(`#pickupSearch_${index}RoomNumberContainer`);
+        const $roomNumberInput = $(`#pickupSearch_${index}RoomNumber`);
+        const $whereInput = $(`.customPickupDiv_${index}`);
+        const askForRoom = $(`#pickupOptions_${index} li.selected`).data("room-status");
+    
+        if (askForRoom !== undefined) {
+          $roomNumberContainer.toggle(askForRoom === true);
+          $whereInput.toggle(askForRoom !== true);
+        }
+    
+        if (askForRoom && data.pickRoomNumber) {
+          $roomNumberInput.val(data.pickRoomNumber); // Set room number field value
+        }
+    
+        $whereInput.hide();
+      }, 200);
+    }
+    
+    if (data.dropoffAnswers && data.dropoffAnswers.length > 0) {
+      let dropoffTitle = data.dropoffAnswers[0].values[0];
+    
+      const dropoffUl = document.getElementById(`dropoffOptions_${index}`);
+      if (dropoffUl) {
+        let matchedLi = Array.from(dropoffUl.getElementsByTagName("li")).find(
+          (li) => li.textContent.trim() === dropoffTitle.trim()
+        );
+    
+        if (matchedLi) {
+          $(matchedLi).trigger("click"); // Trigger click event
+          $(matchedLi).addClass("selected"); // Ensure the class is set
+          $(matchedLi).parent().removeClass("show"); // Hide dropdown after selection
+        }
+      }
+    
+      const dropoffInput = document.getElementById(`dropoffSearch_${index}`);
+      if (dropoffInput) {
+        dropoffInput.value = dropoffTitle;
+      }
+    
+      // Ensure room number visibility is updated
+      setTimeout(() => {
+        const $roomNumberContainer = $(`#dropoffSearch_${index}RoomNumberContainer`);
+        const $roomNumberInput = $(`#dropoffSearch_${index}RoomNumber`);
+        const $whereInput = $(`.customDropoffDiv_${index}`);
+        const askForRoom = $(`#dropoffOptions_${index} li.selected`).data("room-status");
+    
+        if (askForRoom !== undefined) {
+          $roomNumberContainer.toggle(askForRoom === true);
+          $whereInput.toggle(askForRoom !== true);
+        }
+    
+        if (askForRoom && data.dropoffRoomNumber) {
+          $roomNumberInput.val(data.dropoffRoomNumber); // Set room number field value
+        }
+    
+        $whereInput.hide();
+      }, 200);
+    }
+    
+    
+
+    if (data.answers && data.answers.length > 0) {
+      data.answers.forEach(function (answer) {
+        var inputEl = tabElement.querySelector(`[data-question-id="${answer.questionId}"]`);
+        if (inputEl && answer.values.length > 0) {
+          inputEl.value = answer.values[0];
+        }
+      });
+    }
+
+    if (data.passengers && data.passengers.length > 0) {
+      data.passengers.forEach(function (passenger, passengerIndex) {
+        if (passenger.passengerDetails && passenger.passengerDetails.length > 0) {
+          passenger.passengerDetails.forEach(function (detail) {
+            var inputSelector = `[data-pricing-category-id="${passenger.pricingCategoryId}"][data-booking-id="${passenger.bookingId}"][data-question-id="${detail.questionId}"]`;
+            var passengerInput = tabElement.querySelector(inputSelector);
+            if (passengerInput && detail.values.length > 0) {
+              passengerInput.value = detail.values[0];
             }
-          }
+          });
         }
-        // Optionally, update the pickup search input (in case the click handler does not set it)
-        const pickupInput = tabElement.querySelector(`#pickupSearch_${index}`);
-        if (pickupInput && pickupTitle) {
-          pickupInput.value = pickupTitle;
-        }
-      }
+      });
+    }
 
-      // ============================================
-      // 2. Repopulate Drop-off Answer by simulating a click event
-      // ============================================
-      if (data.dropoffAnswers && data.dropoffAnswers.length > 0) {
-        let dropoffTitle = data.dropoffAnswers[0].values[0];
+    // if (data.pickupRoomNumber && data.pickupRoomNumber.length > 0) {
+    //   const pickupRoomInput = tabElement.querySelector(`#pickupSearch_${index}RoomNumber`);
+    //   if (pickupRoomInput) {
+    //     pickupRoomInput.value = data.pickupRoomNumber[0].values[0];
+    //     const pickupRoomContainer = document.getElementById(`pickupSearch_${index}RoomNumberContainer`);
+    //     if (pickupRoomContainer) {
+    //       pickupRoomContainer.style.display = "block";
+    //     }
+    //   }
+    // }
 
-        // If the drop-off container exists, look for its UL of options
-        const dropoffDiv = document.getElementById("dropoffDiv_" + index);
-        if (dropoffDiv) {
-          const ulElement = document.getElementById(`dropoffOptions_${index}`);
-          if (ulElement) {
-            const liElements = ulElement.getElementsByTagName("li");
-            for (let i = 0; i < liElements.length; i++) {
-              let li = liElements[i];
-              if (li.textContent.trim() === dropoffTitle.trim()) {
-                $(li).trigger("click");
-                break;
-              }
-            }
-          }
-        }
-        // Optionally, update the drop-off search input
-        const dropoffInput = tabElement.querySelector(`#dropoffSearch_${index}`);
-        if (dropoffInput && dropoffTitle) {
-          dropoffInput.value = dropoffTitle;
-        }
-      }
+    // if (data.dropoffRoomNumber && data.dropoffRoomNumber.length > 0) {
+    //   const dropoffRoomInput = tabElement.querySelector(`#dropoffSearch_${index}RoomNumber`);
+    //   if (dropoffRoomInput) {
+    //     dropoffRoomInput.value = data.dropoffRoomNumber[0].values[0];
+    //     const dropoffRoomContainer = document.getElementById(`dropoffSearch_${index}RoomNumberContainer`);
+    //     if (dropoffRoomContainer) {
+    //       dropoffRoomContainer.style.display = "block";
+    //     }
+    //   }
+    // }
+  });
+}
 
-      // ============================================
-      // 3. Fill Booking-Level Questions (if any)
-      // ============================================
-      if (data.answers && data.answers.length > 0) {
-        data.answers.forEach(function (answer) {
-          // Look for an input with the matching data-question-id attribute
-          var inputEl = tabElement.querySelector('[data-question-id="' + answer.questionId + '"]');
-          if (inputEl && answer.values.length > 0) {
-            inputEl.value = answer.values[0];
-          }
-        });
-      }
-
-      // ============================================
-      // 4. Fill Passenger Details (if any)
-      // ============================================
-      if (data.passengers && data.passengers.length > 0) {
-        data.passengers.forEach(function (passenger, passengerIndex) {
-          if (passenger.passengerDetails && passenger.passengerDetails.length > 0) {
-            passenger.passengerDetails.forEach(function (detail) {
-              // Build a selector using the data attributes
-              var inputSelector =
-                '[data-pricing-category-id="' + passenger.pricingCategoryId +
-                '"][data-booking-id="' + passenger.bookingId +
-                '"][data-question-id="' + detail.questionId + '"]';
-              var passengerInput = tabElement.querySelector(inputSelector);
-              if (passengerInput && detail.values.length > 0) {
-                passengerInput.value = detail.values[0];
-              }
-            });
-          }
-        });
-      }
-
-      // ============================================
-      // 5. Repopulate Pickup Room Number (if any)
-      // ============================================
-      if (data.pickupRoomNumber && data.pickupRoomNumber.length > 0) {
-        // Assume the room number input is identified as pickupSearch_{index}RoomNumber
-        const pickupRoomInput = tabElement.querySelector(`#pickupSearch_${index}RoomNumber`);
-        if (pickupRoomInput) {
-          pickupRoomInput.value = data.pickupRoomNumber[0].values[0];
-          // Ensure the room number container is visible
-          const pickupRoomContainer = document.getElementById(`pickupSearch_${index}RoomNumberContainer`);
-          if (pickupRoomContainer) {
-            pickupRoomContainer.style.display = "block";
-          }
-        }
-      }
-
-      // ============================================
-      // 6. Repopulate Drop-off Room Number (if any)
-      // ============================================
-      if (data.dropoffRoomNumber && data.dropoffRoomNumber.length > 0) {
-        const dropoffRoomInput = tabElement.querySelector(`#dropoffSearch_${index}RoomNumber`);
-        if (dropoffRoomInput) {
-          dropoffRoomInput.value = data.dropoffRoomNumber[0].values[0];
-          // Ensure the room number container is visible
-          const dropoffRoomContainer = document.getElementById(`dropoffSearch_${index}RoomNumberContainer`);
-          if (dropoffRoomContainer) {
-            dropoffRoomContainer.style.display = "block";
-          }
-        }
-      }
-    });
-  }
 
   function fillForm(moveNext = false) {
     console.log("fill form function called");
-    if (!MainContactFormData) {
+    if (!mainContactDetails) {
       console.log("No form data found!");
       return;
     }
@@ -178,8 +225,8 @@ jQuery(function ($) {
       .find("input, textarea, select")
       .each(function () {
         const questionId = $(this).data("question-id");
-        if (questionId && MainContactFormData[questionId] !== undefined) {
-          const value = MainContactFormData[questionId];
+        if (questionId && mainContactDetails[questionId] !== undefined) {
+          const value = mainContactDetails[questionId];
           if (questionId === "phoneNumber" && window.iti) {
             window.iti.setNumber(value);
           } else {
@@ -419,8 +466,8 @@ jQuery(function ($) {
                   priceResponse.data.pricesByDateRange?.[0]?.rates.find(
                     (rate) => rate.rateId === rateId
                   );
-                
-                 console.log("matchingRate", matchingRate);
+
+                console.log("matchingRate", matchingRate);
                 if (!matchingRate) {
                   console.warn(`No matching rate found for rateId: ${rateId}`);
                   return;
@@ -440,15 +487,15 @@ jQuery(function ($) {
                     const imageUrl = photo?.originalUrl || null;
                     const rates = detailsResponse?.data?.rates.map((rate) => {
                       const detailRateId = rate.id;
-                      if(rateId === detailRateId){
+                      if (rateId === detailRateId) {
                         const extraConfigs = rate?.extraConfigs.map((config) => {
-                          if(config.pricedPerPerson === false){
+                          if (config.pricedPerPerson === false) {
                             bookingType = "GROUP";
                             validatedMaxPerBooking = 1;
                             console.log("pricedPerPerson", config.pricedPerPerson);
                           }
-                       })
-                      }else{
+                        })
+                      } else {
                         console.log("rate id did not match")
                       }
                     });
@@ -458,8 +505,8 @@ jQuery(function ($) {
                     const initialQuantity = existingExtra
                       ? existingExtra.unitCount
                       : 0;
-                    console.log( "booking type" ,bookingType);
-                  
+                    console.log("booking type", bookingType);
+
                     if (bookingType === "SINGLE_PERSON") {
                       const checkboxContainerId = `checkboxContainer_${activityId}_${extraId}`;
                       console.log("passengercheckboxes", item.pricingCategoryBookings);
@@ -603,8 +650,8 @@ jQuery(function ($) {
       })
     );
 
-    const validatedMaxPerBooking =  maxPerBooking;
-   console.log("max per booking from group" ,validatedMaxPerBooking)
+    const validatedMaxPerBooking = maxPerBooking;
+    console.log("max per booking from group", validatedMaxPerBooking)
     function toggleButtons(disable = false) {
       incrementButton.disabled = disable || currentQuantity >= validatedMaxPerBooking;
       decrementButton.disabled = disable || currentQuantity <= minQuantity;
@@ -1001,7 +1048,7 @@ jQuery(function ($) {
               $("#modal").css("display", "none");
               $("body").css("overflow", "auto");
             }
-            if (MainContactFormData !== null) {
+            if (mainContactDetails !== null) {
               fillForm(false);
             }
           });
@@ -1022,7 +1069,7 @@ jQuery(function ($) {
       .then(() => {
         $button.prop("disabled", false);
         $button.html(originalContent);
-        if (MainContactFormData !== null) {
+        if (mainContactDetails !== null) {
           fillForm(false);
         }
       })
@@ -1040,9 +1087,9 @@ jQuery(function ($) {
     $button.html("Please wait...");
     handleCheckoutModalApiCalls("add", null, null, false)
       .then(() => {
-        
+
         $button.prop("disabled", false);
-        if (MainContactFormData !== null) {
+        if (mainContactDetails !== null) {
           fillForm(false);
         }
         $button.html(originalContent);
@@ -1170,7 +1217,7 @@ jQuery(function ($) {
           );
 
         return ` 
-    <div class="custom-checkout-step" data-step="${index + 2}" id="experienceStep_${index}" style="display: none;">
+    <div class="custom-checkout-step" data-step="${index + 2}" id="experienceStep_${index}" data-index="${experience.product.id}_${index}" style="display: none;">
           <h2 class="custom-checkout-section-title">Complete your booking</h2>
         <div class="custom-checkout-divider"></div>
       <div class="custom-checkout-booking-card" data-product-booking-id="${experience.productBookingId}">
@@ -1559,7 +1606,7 @@ jQuery(function ($) {
       console.log("Main contact details do not exist");
     }
     const pickupPlaces = pickupPlacesResponse?.data?.pickupPlaces || [];
-    // Function to initialize dropdowns dynamically for each experience
+  
     function initializeDropdowns(
       containerId,
       inputId,
@@ -1681,7 +1728,6 @@ jQuery(function ($) {
         const hasDropoff = dropoffQuestions?.length > 0;
         const hasPassengers = passengers.length > 0;
 
-        // Pickup and Dropoff IDs
         const pickupDivId = `pickupDiv_${index}`;
         const dropoffDivId = `dropoffDiv_${index}`;
         const pickupInputId = `pickupSearch_${index}`;
@@ -1690,8 +1736,8 @@ jQuery(function ($) {
         const dropoffWhereInput = `.customDropoffDiv_${index}`;
         const pickupOptionsId = `pickupOptions_${index}`;
         const dropoffOptionsId = `dropoffOptions_${index}`;
-        const hasActivityQuestions = questions.length > 0
-        // Initialize pickup and dropoff dropdowns only if required
+        const hasActivityQuestions = questions.length > 0;
+
         if (hasPickup || hasDropoff) {
           initializeDropdowns(
             pickupDivId,
@@ -1718,86 +1764,87 @@ jQuery(function ($) {
         }
         $(`#continueToStep${index + 3}`).on("click", function () {
           const activityIdIndexKey = `${experience.product.id}_${index}`;
-      
+    
+          // ✅ Extract Data
           const activityAnswers = hasActivityQuestions
-              ? questions.map((question) => {
-                    const inputId = `${question.questionId}_${index}`;
-                    const inputValue = $(`#${inputId}`).val()?.trim() || "";
-                    return inputValue ? { questionId: question.questionId, values: [inputValue] } : null;
-                }).filter(Boolean)
-              : undefined;
-      
-          const pickupAnswers = hasPickup && $(`#pickupSearch_${index}`).val()?.trim()
+            ? questions
+                .map((question) => {
+                  const inputId = `${question.questionId}_${index}`;
+                  const inputValue = $(`#${inputId}`).val()?.trim() || "";
+                  return inputValue ? { questionId: question.questionId, values: [inputValue] } : null;
+                })
+                .filter(Boolean)
+            : undefined;
+    
+          const pickupAnswers =
+            hasPickup && $(`#pickupSearch_${index}`).val()?.trim()
               ? [{ questionId: "pickupPlaceDescription", values: [$(`#pickupSearch_${index}`).val().trim()] }]
               : undefined;
-      
-          const dropoffAnswers = hasDropoff && $(`#dropoffSearch_${index}`).val()?.trim()
+    
+          const dropoffAnswers =
+            hasDropoff && $(`#dropoffSearch_${index}`).val()?.trim()
               ? [{ questionId: "dropoffPlaceDescription", values: [$(`#dropoffSearch_${index}`).val().trim()] }]
               : undefined;
-      
+    
+          // ✅ Get room number values **only if required**
+         const pickupRoomNumberInput = $(`#pickupSearch_${index}RoomNumber`).val()?.trim();
+         const dropoffRoomNumberInput = $(`#dropoffSearch_${index}RoomNumber`).val()?.trim();
+         const askForPickupRoom = Boolean($(`#pickupOptions_${index} li.selected`).attr("data-room-status"));
+         const askForDropoffRoom = Boolean($(`#dropoffOptions_${index} li.selected`).attr("data-room-status"));
+         
+    
           const processedPassengers = hasPassengers
-              ? passengers.map((passenger, passengerIndex) => {
-                    const passengerDetails = passenger.passengerDetails.map((detail) => {
-                        const inputId = `${detail.questionId}_${index}_${passengerIndex}`;
-                        const inputValue = $(`#${inputId}`).val()?.trim() || "";
-                        return inputValue ? { questionId: detail.questionId, values: [inputValue] } : null;
-                    }).filter(Boolean);
-      
-                    return {
-                        pricingCategoryId: passenger.pricingCategoryId,
-                        bookingId: passenger.bookingId,
-                        ...(passengerDetails.length > 0 && { passengerDetails }),
-                    };
-                })
-              : undefined;
-      
-          // Store only the relevant activity data
-          const activityData = {
-              ...(activityAnswers && { answers: activityAnswers }),
-              ...(pickupAnswers && { pickupAnswers }),
-              ...(dropoffAnswers && { dropoffAnswers }),
-              ...(processedPassengers && { passengers: processedPassengers }),
-          };
-      
-          if (!activityTabData.activityTabData) {
-              activityTabData.activityTabData = {};
+            ? passengers.map((passenger, passengerIndex) => {
+                const passengerDetails = passenger.passengerDetails
+                  .map((detail) => {
+                    const inputId = `${detail.questionId}_${index}_${passengerIndex}`;
+                    const inputValue = $(`#${inputId}`).val()?.trim() || "";
+                    return inputValue ? { questionId: detail.questionId, values: [inputValue] } : null;
+                  })
+                  .filter(Boolean);
+    
+                return {
+                  pricingCategoryId: passenger.pricingCategoryId,
+                  bookingId: passenger.bookingId,
+                  ...(passengerDetails.length > 0 && { passengerDetails }),
+                };
+              })
+            : undefined;
+    
+          // ✅ Store activity data
+          if (!activityTabData) {
+            activityTabData = {}; // Ensure object is initialized
           }
-
-          activityTabData.activityTabData[activityIdIndexKey] = activityData;
-      
-          console.log(`Stored data for activity ${activityIdIndexKey}:`, activityData);
-          console.log("Updated activityTabData:", activityTabData);
-      
-          $.ajax({
-              url: bokunAjax.ajaxUrl,
-              method: "POST",
-              data: {
-                  action: "store_activity_tab_data",
-                  session_id: getOrCreateSessionId(),
-                  activityTabData: JSON.stringify(activityTabData.activityTabData), // Send only nested data
-              },
-              success: function (response) {
-                  if (response.success) {
-                      console.log("Successfully stored activityTabData in transient:", response.data);
-                      activityTabData.activityTabData = response.data.activityTabData; // Keep it updated
-                  } else {
-                      console.error("Error storing activity data.");
-                  }
-              },
-              error: function () {
-                  console.error("Failed to store activity data.");
-              },
-          });
-      });
-      
-
-
+          activityTabData[activityIdIndexKey] = {
+            ...(activityAnswers && { answers: activityAnswers }),
+            ...(pickupAnswers && { pickupAnswers }),
+            ...(askForPickupRoom && pickupRoomNumberInput && { pickRoomNumber: pickupRoomNumberInput }), // Store only if required
+            ...(dropoffAnswers && { dropoffAnswers }),
+            ...(askForDropoffRoom && dropoffRoomNumberInput && { dropoffRoomNumber: dropoffRoomNumberInput }), // Store only if required
+            ...(processedPassengers && { passengers: processedPassengers }),
+          };
+    
+          if (!checkoutTabData) {
+            checkoutTabData = {}; // Ensure object is initialized
+          }
+          checkoutTabData[activityIdIndexKey] = {
+            ...(activityAnswers && { answers: activityAnswers }),
+            ...(pickupAnswers && { pickupAnswers }),
+            ...(askForPickupRoom && pickupRoomNumberInput && { pickRoomNumber: pickupRoomNumberInput }), // Store only if required
+            ...(dropoffAnswers && { dropoffAnswers }),
+            ...(askForDropoffRoom && dropoffRoomNumberInput && { dropoffRoomNumber: dropoffRoomNumberInput }), // Store only if required
+            ...(processedPassengers && { passengers: processedPassengers }),
+          };
+          console.log(`✅ Stored data for activity ${activityIdIndexKey}:`, checkoutTabData);
+          storeActivityTabData();
+        });
       }
     });
 
-
+    // Console log all stored activities' data
     console.log("All activities data:", activityTabData);
-   
+    console.log("All checkout tab data :", checkoutTabData);
+
     attactCheckoutModalFunction(checkoutExperience);
     const footerLinks = document.querySelectorAll(
       ".custom-checkout-footer-link"
@@ -1884,7 +1931,7 @@ jQuery(function ($) {
           activityOptionsResponse,
           formDataArray,
           checkoutExperience,
-          activityTabData
+          checkoutTabData
         );
       } catch (error) {
         console.error("Checkout failed:", error);
@@ -1898,15 +1945,15 @@ jQuery(function ($) {
     activityOptionsResponse,
     formDataArray,
     checkoutExperience,
-    activityTabData
+    checkoutTabData
   ) {
-    console.log("Activity tab data from submit checkout:", activityTabData);
+    console.log("Activity tab data from submit checkout:", checkoutTabData);
 
     const activityBookings = checkoutExperience.map((experience, index) => {
       const activityId = experience.product.id;
       const bookingId = experience.productBookingId;
       const activityKey = `${activityId}_${index}`;
-      const activityData = activityTabData[activityKey] || {};
+      const activityData = checkoutTabData[activityKey] || {};
 
       // Extract data from activityTabData
       const pickupAnswers = activityData.pickupAnswers || [];
@@ -1938,7 +1985,7 @@ jQuery(function ($) {
     };
 
     console.log("Final Shopping Cart:", shoppingCart);
-    // return;
+    return;
     $.ajax({
       url: bokunAjax.ajaxUrl,
       method: "POST",

@@ -119,9 +119,9 @@ jQuery(document).ready(function ($) {
         }
       });
 
-      MainContactFormData = structuredData;
-      console.log("main contact details form data " , MainContactFormData);
-      storeMainContactDetails(MainContactFormData);
+      mainContactDetails = structuredData;
+      console.log("main contact details form data " , mainContactDetails);
+      storeMainContactDetails(mainContactDetails);
       if (!validatePhoneNumber()) {
         return;
       }
@@ -267,7 +267,7 @@ jQuery(document).ready(function ($) {
         url: bokunAjax.ajaxUrl,
         method: "POST",
         data: {
-            action: "store_activity_tab_data",
+            action: "store_main_contact_details",
             session_id: localStorage.getItem("bokunSessionId"),
             mainContactDetails: JSON.stringify(mainContactDetails),
         },
