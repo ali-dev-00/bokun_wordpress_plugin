@@ -1309,3 +1309,11 @@
 }
 
 
+@media (max-width: 560px) {
+    #custom-phone-code-picker {
+        width: 58dvh !important;
+    }
+    .custom-checkout-pickup-dropoff-section{
+        flex-direction: column !important ;
+    }
+}

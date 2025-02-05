@@ -63,17 +63,27 @@ function fetch_experience_details()
                     }
                     ?>
                 </div>
-                <div class="custom-bokun-small-images">
+
+                <?php
+                $photos = isset($response['photos']) && is_array($response['photos']) ? $response['photos'] : [];
+                $photoCount = count($photos);
+                ?>
+
+                <div class=" <?= ($photoCount === 2) ? 'custom-bokun-large-image' : 'custom-bokun-small-images'; ?>">
                     <?php
-                    if (isset($response['photos']) && is_array($response['photos'])) {
-                        $photos = $response['photos'];
+                    if ($photoCount > 0) {
                         for ($i = 1; $i < 5; $i++) {
-                            $smallImage = $photos[$i]['derived'][1]['url'] ?? null;
+                            $smallImage = $photos[$i]['originalUrl'] ?? null;
                             if ($smallImage) {
-                                // Render the image
-                                echo '<div class="custom-bokun-small-image"><img src="' . htmlspecialchars($smallImage) . '" alt="Small Image ' . ($i + 1) . '"></div>';
-                            } else {
-                                echo '<img src="placeholder.jpg" alt="" class="image-unavailable-hide">';
+                                if ($photoCount > 2) {
+                                    echo '<div class="custom-bokun-small-image">';
+                                }
+
+                                echo '<img src="' . htmlspecialchars($smallImage) . '" alt="Small Image ' . ($i + 1) . '">';
+
+                                if ($photoCount > 2) {
+                                    echo '</div>';
+                                }
                             }
                         }
                     } else {
@@ -81,6 +91,7 @@ function fetch_experience_details()
                     }
                     ?>
                 </div>
+
             </div>
             <!-- Left Section -->
             <div class="custom-bokun-modal-body">
@@ -310,12 +321,18 @@ function fetch_experience_details()
                                                 </p>
                                             </div>
                                         <?php endif; ?>
-                                        <?php if (!empty($response['bookingCutoffHours'])): ?>
+                                        <?php if (!empty($response['bookingCutoffHours']) && $response['bookingCutoffHours'] !== '0'): ?>
                                             <div class="custom-bokun-info-column">
                                                 <h4>Booking in advance</h4>
-                                                <p> Cut off hours : <?php echo $response['bookingCutoffHours'] ?> hours</p>
+                                                <p> Cut off hours: <?php echo $response['bookingCutoffHours']; ?> hours</p>
+                                            </div>
+                                        <?php elseif (!empty($response['bookingCutoffDays']) && $response['bookingCutoffDays'] !== '0'): ?>
+                                            <div class="custom-bokun-info-column">
+                                                <h4>Booking in advance</h4>
+                                                <p> Cut off days: <?php echo $response['bookingCutoffDays']; ?> day</p>
                                             </div>
                                         <?php endif; ?>
+
                                         <?php if (!empty($response['durationText'])): ?>
                                             <div class="custom-bokun-info-column">
                                                 <h4>Duration</h4>
@@ -565,8 +582,9 @@ function fetch_experience_details()
                         <?php if (!empty($response['capacityType']) && $response['capacityType'] === "ON_REQUEST"): ?>
                             <div class="custom-alert">
                                 <strong>⚠ Please read before continuing!</strong>
-                                <p>This experience is booked on request. The owner of the experience will respond to the request within 
-                                <strong><?php echo $response['requestDeadlineHours']; ?> hour(s)</strong>.</p>
+                                <p>This experience is booked on request. The owner of the experience will respond to the request within
+                                    <strong><?php echo $response['requestDeadlineHours']; ?> hour(s)</strong>.
+                                </p>
                             </div>
                         <?php endif; ?>
 

@@ -1028,8 +1028,7 @@ jQuery(document).ready(function ($) {
                                    }
                              </li>
                              <li>
-                             <i class="fas fa-info"></i>
-                                  ${rate.maxPerBooking ? "Can be booked upto "+ rate.maxPerBooking : ""}
+                                  ${rate.maxPerBooking ? " <i class='fas fa-info'></i> Can be booked upto "+ rate.maxPerBooking : ""}
                              </li>
                              </ul>
                              <div style="margin-top: 10px;">

@@ -44,34 +44,34 @@ jQuery(function ($) {
   function storeActivityTabData() {
     const sessionId = getOrCreateSessionId();
     if (!sessionId) {
-        console.error("❌ Invalid session ID.");
-        return;
+      console.error("❌ Invalid session ID.");
+      return;
     }
 
     console.log("🔄 Storing activityTabData:", activityTabData);
     console.log("📌 Type of activityTabData:", typeof activityTabData);
 
-    
+
 
     // Make AJAX request
     $.ajax({
-        url: bokunAjax.ajaxUrl,
-        method: "POST",
-        data: {
-            action: "store_activity_tab_data",
-            session_id: sessionId,
-            activityTabData: JSON.stringify(activityTabData), // Send as JSON string
-        },
-        dataType: "json",
-        success: function (response) {
-            console.log("✅ Successfully stored activityTabData:", response.data);
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            console.error(`❌ Failed to store activity data: ${textStatus}, ${errorThrown}`);
-            console.error("📌 Response Text:", jqXHR.responseText);
-        },
+      url: bokunAjax.ajaxUrl,
+      method: "POST",
+      data: {
+        action: "store_activity_tab_data",
+        session_id: sessionId,
+        activityTabData: JSON.stringify(activityTabData), // Send as JSON string
+      },
+      dataType: "json",
+      success: function (response) {
+        console.log("✅ Successfully stored activityTabData:", response.data);
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.error(`❌ Failed to store activity data: ${textStatus}, ${errorThrown}`);
+        console.error("📌 Response Text:", jqXHR.responseText);
+      },
     });
-}
+  }
 
 
 
@@ -1314,50 +1314,76 @@ jQuery(function ($) {
               </div>
               ` : ""
             }
-                ${activityBooking &&
+             ${activityBooking &&
               activityBooking.passengers.some(
                 (passenger) => passenger.passengerDetails.length > 0
               )
               ? `
-              ${activityBooking.passengers
+  ${activityBooking.passengers
                 .map(
                   (passenger, passengerIndex) => `
 
-                    <div class="custom-checkout-participant-inputs">
-                     <h3>Traveller ${passengerIndex + 1} (${passenger.pricingCategoryTitle
-                    })</h3>
-                          <div class="custom-form-child-section">
-                      ${passenger.passengerDetails
+        <div class="custom-checkout-participant-inputs">
+         <h3>Traveller ${passengerIndex + 1} (${passenger.pricingCategoryTitle})</h3>
+          <div class="custom-form-child-section">
+          ${passenger.passengerDetails
                       .map((detail) => {
-                        // Determine input type based on dataType
-                        let inputType = "text"; // Default to "text"
+                        // ✅ Determine input type based on dataType
+                        let inputType = "text"; // Default
                         if (detail.dataType === "DATE") inputType = "date";
                         if (detail.dataType === "NUMBER") inputType = "number";
 
-                        return `
-                          <div class="custom-checkout-form-group">
-                            <label for="${detail.questionId}_${index}_${passengerIndex}">
-                              ${detail.label} ${detail.required ? "<span>*</span>" : ""}
-                            </label>
-                            <input type="${inputType}" 
-                              id="${detail.questionId}_${index}_${passengerIndex}" 
-                              data-question-id="${detail.questionId}" 
-                              data-pricing-category-id="${passenger.pricingCategoryId}" 
-                              data-booking-id="${passenger.bookingId}" 
-                              class="passenger-input"
-                              ${detail.required ? "required" : ""}
-                              ${inputType === "date" ? 'placeholder="YYYY-MM-DD"' : ""}
-                            />
-                          </div>`;
+                        // ✅ Check if input should be a dropdown
+                        if (detail.selectFromOptions && detail.answerOptions?.length) {
+                          return `
+                <div class="custom-checkout-form-group">
+                  <label for="${detail.questionId}_${index}_${passengerIndex}">
+                    ${detail.label} ${detail.required ? "<span>*</span>" : ""}
+                  </label>
+                  <select 
+                    id="${detail.questionId}_${index}_${passengerIndex}" 
+                    data-question-id="${detail.questionId}" 
+                    data-pricing-category-id="${passenger.pricingCategoryId}" 
+                    data-booking-id="${passenger.bookingId}" 
+                    class="passenger-input" 
+                    ${detail.required ? "required" : ""}
+                  >
+                    <option value="">Select ${detail.label}</option>
+                    ${detail.answerOptions
+                              .map(
+                                (option) => `
+                        <option value="${option.value}">${option.label}</option>`
+                              )
+                              .join("")}
+                  </select>
+                </div>`;
+                        } else {
+                          // ✅ Render standard input field
+                          return `
+                <div class="custom-checkout-form-group">
+                  <label for="${detail.questionId}_${index}_${passengerIndex}">
+                    ${detail.label} ${detail.required ? "<span>*</span>" : ""}
+                  </label>
+                  <input type="${inputType}" 
+                    id="${detail.questionId}_${index}_${passengerIndex}" 
+                    data-question-id="${detail.questionId}" 
+                    data-pricing-category-id="${passenger.pricingCategoryId}" 
+                    data-booking-id="${passenger.bookingId}" 
+                    class="passenger-input"
+                    ${detail.required ? "required" : ""}
+                    ${inputType === "date" ? 'placeholder="YYYY-MM-DD"' : ""}
+                  />
+                </div>`;
+                        }
                       })
                       .join("")}
-                        </div>
-                      </div>
-                    `
+          </div>
+        </div>`
                 )
                 .join("")}`
               : ""
             }
+
                </div>
            </div>`
             : ""
@@ -1421,9 +1447,9 @@ jQuery(function ($) {
                 <div class="custom-checkout-step-4-info">
                   <p><strong>Travellers:</strong> ${experience.lineItems[0].people ?? "not found"
             }</p>
-                  <p><strong>Duration:</strong> ${experience.lineItems[0].totalAsText ?? "not found"
+                  <p><strong>Price:</strong> ${experience.lineItems[0].totalAsText ?? "not found"
             }</p>
-                  <p><strong>Departure:</strong> 8 hours</p>
+                  <p><strong>Departure:</strong>${experience.dates ?? "not found"}</p>
                 </div>
               </div>
             </div>
@@ -1725,14 +1751,21 @@ jQuery(function ($) {
         checkoutOptionsResponse.data.questions.activityBookings.find(
           (booking) => booking.activityId === experience.product.id
         );
+
+      console.log("activityBooking", activityBooking);
+
       const parentPickupDropoffDiv = `#custom-checkout-pickup-dropoff_${index}`;
 
       if (activityBooking) {
-        const { pickupQuestions, dropoffQuestions, passengers = [], questions = [] } = activityBooking;
+        const { pickupQuestions = [], dropoffQuestions = [], passengers = [], questions = [] } = activityBooking;
 
-        const hasPickup = pickupQuestions?.length > 0;
-        const hasDropoff = dropoffQuestions?.length > 0;
+        // ✅ Correctly check if pickup/dropoff exist
+        const hasPickup = Array.isArray(pickupQuestions) && pickupQuestions.length > 0;
+        const hasDropoff = Array.isArray(dropoffQuestions) && dropoffQuestions.length > 0;
         const hasPassengers = passengers.length > 0;
+        const hasActivityQuestions = questions.length > 0;
+
+        console.log("Has Pickup?", hasPickup, "| Has Dropoff?", hasDropoff);
 
         const pickupDivId = `pickupDiv_${index}`;
         const dropoffDivId = `dropoffDiv_${index}`;
@@ -1742,9 +1775,10 @@ jQuery(function ($) {
         const dropoffWhereInput = `.customDropoffDiv_${index}`;
         const pickupOptionsId = `pickupOptions_${index}`;
         const dropoffOptionsId = `dropoffOptions_${index}`;
-        const hasActivityQuestions = questions.length > 0;
 
-        if (hasPickup || hasDropoff) {
+        // ✅ Render pickup ONLY if it exists
+        if (hasPickup) {
+          console.log("🚀 Rendering Pickup Field...");
           initializeDropdowns(
             pickupDivId,
             pickupInputId,
@@ -1754,6 +1788,11 @@ jQuery(function ($) {
             pickupOptionsId,
             `pickupAttention_${index}`
           );
+        }
+
+        // ✅ Render dropoff ONLY if it exists
+        if (hasDropoff) {
+          console.log("🚀 Rendering Dropoff Field...");
           initializeDropdowns(
             dropoffDivId,
             dropoffInputId,
@@ -1764,10 +1803,13 @@ jQuery(function ($) {
           );
         }
 
+        // ❌ Remove parent div if neither pickup nor dropoff exist
         if (!hasPickup && !hasDropoff) {
+          console.log("❌ No Pickup or Dropoff - Removing Parent Div");
           $(parentPickupDropoffDiv).remove();
-          // $("#addExpSection").remove();
         }
+
+        // ✅ Handle Continue Button Click
         $(`#continueToStep${index + 3}`).on("click", function () {
           const activityIdIndexKey = `${experience.product.id}_${index}`;
 
@@ -1783,12 +1825,12 @@ jQuery(function ($) {
             : undefined;
 
           const pickupAnswers =
-            $(`#pickupSearch_${index}`).val()?.trim()
+            hasPickup && $(`#pickupSearch_${index}`).val()?.trim()
               ? [{ questionId: "pickupPlaceDescription", values: [$(`#pickupSearch_${index}`).val().trim()] }]
               : undefined;
 
           const dropoffAnswers =
-             $(`#dropoffSearch_${index}`).val()?.trim()
+            hasDropoff && $(`#dropoffSearch_${index}`).val()?.trim()
               ? [{ questionId: "dropoffPlaceDescription", values: [$(`#dropoffSearch_${index}`).val().trim()] }]
               : undefined;
 
@@ -1798,7 +1840,7 @@ jQuery(function ($) {
           const askForPickupRoom = Boolean($(`#pickupOptions_${index} li.selected`).attr("data-room-status"));
           const askForDropoffRoom = Boolean($(`#dropoffOptions_${index} li.selected`).attr("data-room-status"));
 
-
+          // ✅ Process Passengers
           const processedPassengers = hasPassengers
             ? passengers.map((passenger, passengerIndex) => {
               const passengerDetails = passenger.passengerDetails
@@ -1818,34 +1860,33 @@ jQuery(function ($) {
             : undefined;
 
           // ✅ Store activity data
-          if (!activityTabData) {
-            activityTabData = {}; // Ensure object is initialized
-          }
+          activityTabData = activityTabData || {}; // Ensure it's initialized
           activityTabData[activityIdIndexKey] = {
             ...(activityAnswers && { answers: activityAnswers }),
             ...(pickupAnswers && { pickupAnswers }),
-            ...(askForPickupRoom && pickupRoomNumberInput && { pickRoomNumber: pickupRoomNumberInput }), // Store only if required
+            ...(askForPickupRoom && pickupRoomNumberInput && { pickRoomNumber: pickupRoomNumberInput }),
             ...(dropoffAnswers && { dropoffAnswers }),
-            ...(askForDropoffRoom && dropoffRoomNumberInput && { dropoffRoomNumber: dropoffRoomNumberInput }), // Store only if required
+            ...(askForDropoffRoom && dropoffRoomNumberInput && { dropoffRoomNumber: dropoffRoomNumberInput }),
             ...(processedPassengers && { passengers: processedPassengers }),
           };
 
-          if (!checkoutTabData) {
-            checkoutTabData = {}; // Ensure object is initialized
-          }
+          // ✅ Store checkout data
+          checkoutTabData = checkoutTabData || {}; // Ensure it's initialized
           checkoutTabData[activityIdIndexKey] = {
             ...(activityAnswers && { answers: activityAnswers }),
             ...(pickupAnswers && { pickupAnswers }),
-            ...(askForPickupRoom && pickupRoomNumberInput && { pickRoomNumber: pickupRoomNumberInput }), // Store only if required
+            ...(askForPickupRoom && pickupRoomNumberInput && { pickRoomNumber: pickupRoomNumberInput }),
             ...(dropoffAnswers && { dropoffAnswers }),
-            ...(askForDropoffRoom && dropoffRoomNumberInput && { dropoffRoomNumber: dropoffRoomNumberInput }), // Store only if required
+            ...(askForDropoffRoom && dropoffRoomNumberInput && { dropoffRoomNumber: dropoffRoomNumberInput }),
             ...(processedPassengers && { passengers: processedPassengers }),
           };
+
           console.log(`✅ Stored data for activity ${activityIdIndexKey}:`, checkoutTabData);
           storeActivityTabData();
         });
       }
     });
+
 
     // Console log all stored activities' data
     console.log("All activities data:", activityTabData);
