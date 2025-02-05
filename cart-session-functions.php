@@ -205,11 +205,12 @@ function bokun_checkout_submit_handler()
         "errorUrl" => "http://localhost/xlogicsolutions/atlas-alarab/error-booking",
         "cancelUrl" => "http://localhost/xlogicsolutions/atlas-alarab/cancelUrl"
     ];
+
     $method = 'POST';
     $path = '/checkout.json/submit';
     $response = authenticateBokunApi($method, $path, $body);
     if ($response) {
-       // printR($response);
+       
         $confirmation_code = $response['booking']['confirmationCode'] ?? 'not found';
         $booking_status = $response['booking']['status'] ?? 'not found';
         $payment_status = 'pending';

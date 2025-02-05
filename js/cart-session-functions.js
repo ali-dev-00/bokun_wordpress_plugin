@@ -37,9 +37,7 @@ jQuery(function ($) {
       }
     });
   }
-
-
-
+  
   getStoredData();
   function storeActivityTabData() {
     const sessionId = getOrCreateSessionId();
@@ -489,6 +487,9 @@ jQuery(function ($) {
                       photo,
                     } = extra;
                     const amount = price || 0;
+                    if(amount === 0) {
+                      return;
+                    }
                     const currency = localStorage.getItem("currency") || "AED";
                     const imageUrl = photo?.originalUrl || null;
                     const rates = detailsResponse?.data?.rates.map((rate) => {
@@ -497,7 +498,7 @@ jQuery(function ($) {
                         const extraConfigs = rate?.extraConfigs.map((config) => {
                           if (config.pricedPerPerson === false) {
                             bookingType = "GROUP";
-                            validatedMaxPerBooking = 1;
+                            validatedMaxPerBooking = 1000;
                             console.log("pricedPerPerson", config.pricedPerPerson);
                           }
                         })
@@ -1995,7 +1996,7 @@ jQuery(function ($) {
     checkoutTabData
   ) {
     console.log("Activity tab data from submit checkout:", checkoutTabData);
-
+     
     const activityBookings = checkoutExperience.map((experience, index) => {
       const activityId = experience.product.id;
       const bookingId = experience.productBookingId;

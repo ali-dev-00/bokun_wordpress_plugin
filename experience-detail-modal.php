@@ -69,15 +69,19 @@ function fetch_experience_details()
                 $photoCount = count($photos);
                 ?>
 
-                <div class=" <?= ($photoCount === 2) ? 'custom-bokun-large-image' : 'custom-bokun-small-images'; ?>">
+                <div class=" <?= ($photoCount === 2) ? 'custom-bokun-large-image' : 'custom-bokun-small-images'; ?>" style=" <?= ($photoCount === 3) ? 'display : flex !important;' : ''; ?>"  >
                     <?php
                     if ($photoCount > 0) {
                         for ($i = 1; $i < 5; $i++) {
-                            $smallImage = $photos[$i]['originalUrl'] ?? null;
+                            $smallImage = $photos[$i]['derived'][2]['url'] ?? null;
                             if ($smallImage) {
                                 if ($photoCount > 2) {
-                                    echo '<div class="custom-bokun-small-image">';
+                                  
+                                    $style = ($i === 3) && ($photoCount === 4) ? 'grid-column: span 2 !important;' : '';
+                                    echo '<div class="custom-bokun-small-image" style="' . $style . '">';
                                 }
+                                
+                                
 
                                 echo '<img src="' . htmlspecialchars($smallImage) . '" alt="Small Image ' . ($i + 1) . '">';
 
@@ -204,7 +208,20 @@ function fetch_experience_details()
                                         <div class="sc-eACIdI hHknew"></div>
 
                                         <div>
+                                            
                                             <?php
+                                             $inclusions = isset($response['inclusions']) ? $response['inclusions'] : [];
+
+                                             // Check if there are inclusions
+                                             if (!empty($inclusions)) {
+                                                 
+                                                 foreach ($inclusions as $item) {
+                                                     // Convert API inclusion code to readable text
+                                                     $readableText = $inclusionMap[$item] ?? ucfirst(strtolower(str_replace('_', ' ', $item)));
+                                                     echo  htmlspecialchars($readableText) ;
+                                                 }
+                                                 
+                                             } 
                                             $includedItems = explode('<br />', $response['included']);
                                             foreach ($includedItems as $item):
                                             ?>
