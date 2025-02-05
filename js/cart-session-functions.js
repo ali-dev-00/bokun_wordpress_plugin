@@ -1,10 +1,30 @@
 
 var activityTabData = [];
 var mainContactDetails = {};
-var checkoutTabData = {};// dont change this 
+
 jQuery(function ($) {
 
-
+  function storeMainContactDetails(mainContactDetails) {
+    $.ajax({
+        url: bokunAjax.ajaxUrl,
+        method: "POST",
+        data: {
+            action: "store_main_contact_details",
+            session_id: localStorage.getItem("bokunSessionId"),
+            mainContactDetails: JSON.stringify(mainContactDetails),
+        },
+        success: function (response) {
+            if (response.success) {
+                console.log("Successfully stored mainContactDetails in transient:", response.data);
+            } else {
+                console.error("Error storing main contact details.");
+            }
+        },
+        error: function () {
+            console.error("Failed to store main contact details.");
+        },
+    });
+}
 
   function getStoredData() {
     const sessionId = getOrCreateSessionId();
@@ -37,7 +57,7 @@ jQuery(function ($) {
       }
     });
   }
-  
+
   getStoredData();
   function storeActivityTabData() {
     const sessionId = getOrCreateSessionId();
@@ -217,6 +237,36 @@ jQuery(function ($) {
       // }
     });
   }
+
+//   function renewBookingIds(checkoutOptionsResponse) {
+//     var checkoutExperience = checkoutOptionsResponse.data.questions.activityBookings;
+
+//     checkoutExperience.forEach((activity, index) => {
+//         const activityBookingId = activity.bookingId; // New activity bookingId
+//         const passengers = activity.passengers; // New passenger bookingIds
+
+//         // Construct the key to find the activity in activityTabData
+//         const activityKey = `${activity.activityId}_${index}`;
+
+//         if (activityTabData.hasOwnProperty(activityKey)) {
+//             console.log(`🔄 Updating Activity: ${activityKey}`);
+
+//             // Update the main booking ID
+//             activityTabData[activityKey].bookingId = activityBookingId;
+
+//             // Update passenger booking IDs
+//             activity.passengers.forEach((passenger, passengerIndex) => {
+//                 if (activityTabData[activityKey].passengers[passengerIndex]) {
+//                     activityTabData[activityKey].passengers[passengerIndex].bookingId = passenger.bookingId;
+//                 }
+//             });
+
+//             console.log("✅ Updated Activity Data:", activityTabData[activityKey]);
+//         } else {
+//             console.warn(`⚠️ Activity Key Not Found: ${activityKey}`);
+//         }
+//     });
+// }
 
 
   function fillForm(moveNext = false) {
@@ -406,8 +456,11 @@ jQuery(function ($) {
           return;
         }
         if (handleExtrasSection === true) {
+          // update extras quantity after right section and update right section 
           checkoutModalRightSection(checkoutOptionsResponse, cartResponse),
-            handleExtras(cartResponse);
+          //handleExtras(cartResponse);
+          //renew booking ids after adding extras for activity
+          initializeSubmitCheckout(checkoutOptionsResponse);
         } else {
           handleCheckoutModal(
             pickupPlacesResponse,
@@ -417,8 +470,9 @@ jQuery(function ($) {
           $(".custom-checkout-modal-overlay").css("display", "flex");
           $(".custom-bokun-modal-content").hide();
           $("body").css("overflow", "hidden");
-          handleExtras(cartResponse);
+         // handleExtras(cartResponse);
         }
+        handleExtras(cartResponse);
         fillActivityTabs();
 
       } else {
@@ -487,7 +541,7 @@ jQuery(function ($) {
                       photo,
                     } = extra;
                     const amount = price || 0;
-                    if(amount === 0) {
+                    if (amount === 0) {
                       return;
                     }
                     const currency = localStorage.getItem("currency") || "AED";
@@ -1633,7 +1687,9 @@ jQuery(function ($) {
             addedQuestions.add(questionId);
           }
         });
-        console.log("Form Data:", formDataArray); // Debugging: Log the collected form data
+        console.log("Form Data:", formDataArray); 
+        mainContactDetails = formDataArray;
+        storeMainContactDetails(mainContactDetails);
       };
     } else {
       console.log("Main contact details do not exist");
@@ -1758,14 +1814,14 @@ jQuery(function ($) {
       const parentPickupDropoffDiv = `#custom-checkout-pickup-dropoff_${index}`;
 
       if (activityBooking) {
-        const { pickupQuestions = [], dropoffQuestions = [], passengers = [], questions = [] } = activityBooking;
+        const { pickupQuestions = [], dropoffQuestions = [], passengers = [], questions = [] , bookingId } = activityBooking;
 
         // ✅ Correctly check if pickup/dropoff exist
         const hasPickup = Array.isArray(pickupQuestions) && pickupQuestions.length > 0;
         const hasDropoff = Array.isArray(dropoffQuestions) && dropoffQuestions.length > 0;
         const hasPassengers = passengers.length > 0;
         const hasActivityQuestions = questions.length > 0;
-
+        
         console.log("Has Pickup?", hasPickup, "| Has Dropoff?", hasDropoff);
 
         const pickupDivId = `pickupDiv_${index}`;
@@ -1776,7 +1832,7 @@ jQuery(function ($) {
         const dropoffWhereInput = `.customDropoffDiv_${index}`;
         const pickupOptionsId = `pickupOptions_${index}`;
         const dropoffOptionsId = `dropoffOptions_${index}`;
-
+        const activityBookingId = bookingId;
         // ✅ Render pickup ONLY if it exists
         if (hasPickup) {
           console.log("🚀 Rendering Pickup Field...");
@@ -1869,20 +1925,10 @@ jQuery(function ($) {
             ...(dropoffAnswers && { dropoffAnswers }),
             ...(askForDropoffRoom && dropoffRoomNumberInput && { dropoffRoomNumber: dropoffRoomNumberInput }),
             ...(processedPassengers && { passengers: processedPassengers }),
+            ...(activityBookingId && { bookingId: activityBookingId }),
           };
 
-          // ✅ Store checkout data
-          checkoutTabData = checkoutTabData || {}; // Ensure it's initialized
-          checkoutTabData[activityIdIndexKey] = {
-            ...(activityAnswers && { answers: activityAnswers }),
-            ...(pickupAnswers && { pickupAnswers }),
-            ...(askForPickupRoom && pickupRoomNumberInput && { pickRoomNumber: pickupRoomNumberInput }),
-            ...(dropoffAnswers && { dropoffAnswers }),
-            ...(askForDropoffRoom && dropoffRoomNumberInput && { dropoffRoomNumber: dropoffRoomNumberInput }),
-            ...(processedPassengers && { passengers: processedPassengers }),
-          };
 
-          console.log(`✅ Stored data for activity ${activityIdIndexKey}:`, checkoutTabData);
           storeActivityTabData();
         });
       }
@@ -1891,7 +1937,6 @@ jQuery(function ($) {
 
     // Console log all stored activities' data
     console.log("All activities data:", activityTabData);
-    console.log("All checkout tab data :", checkoutTabData);
 
     attactCheckoutModalFunction(checkoutExperience);
     const footerLinks = document.querySelectorAll(
@@ -1967,43 +2012,46 @@ jQuery(function ($) {
       });
     });
     fillActivityTabs();
+   
+
+
+  }
+  function initializeSubmitCheckout(checkoutOptionsResponse){
+    var checkoutExperience =  checkoutOptionsResponse.data.options[0].invoice.productInvoices;
     $(document).on("click", "#confirmButton", async function () {
       var $button = $(this);
       $button.prop("disabled", true).html(`
     
           <span>Processing...</span>
       `);
-
+  
       try {
         await submitCheckout(
-          activityOptionsResponse,
           formDataArray,
           checkoutExperience,
-          checkoutTabData
+          activityTabData
         );
       } catch (error) {
         console.error("Checkout failed:", error);
         $button.prop("disabled", false).html(`Reserve and Pay Now ${checkoutOptionsResponse.data.options[0].formattedAmount}`);
       }
     });
-
-
   }
+
   async function submitCheckout(
-    activityOptionsResponse,
     formDataArray,
     checkoutExperience,
-    checkoutTabData
+    activityTabData
   ) {
-    console.log("Activity tab data from submit checkout:", checkoutTabData);
-     
+    console.log("Activity tab data from submit checkout:", activityTabData);
+
     const activityBookings = checkoutExperience.map((experience, index) => {
       const activityId = experience.product.id;
-      const bookingId = experience.productBookingId;
+      
       const activityKey = `${activityId}_${index}`;
-      const activityData = checkoutTabData[activityKey] || {};
-
+      const activityData = activityTabData[activityKey] || {};
       // Extract data from activityTabData
+      const bookingId = activityData.bookingId;
       const pickupAnswers = activityData.pickupAnswers || [];
       const dropoffAnswers = activityData.dropoffAnswers || [];
       const passengers = activityData.passengers || [];

@@ -119,9 +119,7 @@ jQuery(document).ready(function ($) {
         }
       });
 
-      mainContactDetails = structuredData;
-      console.log("main contact details form data " , mainContactDetails);
-      storeMainContactDetails(mainContactDetails);
+      
       if (!validatePhoneNumber()) {
         return;
       }
@@ -262,25 +260,5 @@ jQuery(document).ready(function ($) {
       }
     });
   }
-  function storeMainContactDetails(mainContactDetails) {
-    $.ajax({
-        url: bokunAjax.ajaxUrl,
-        method: "POST",
-        data: {
-            action: "store_main_contact_details",
-            session_id: localStorage.getItem("bokunSessionId"),
-            mainContactDetails: JSON.stringify(mainContactDetails),
-        },
-        success: function (response) {
-            if (response.success) {
-                console.log("Successfully stored mainContactDetails in transient:", response.data);
-            } else {
-                console.error("Error storing main contact details.");
-            }
-        },
-        error: function () {
-            console.error("Failed to store main contact details.");
-        },
-    });
-}
+
 });
