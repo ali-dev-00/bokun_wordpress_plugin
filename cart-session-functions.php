@@ -79,10 +79,10 @@ function add_to_cart_handler()
 }
 add_action('wp_ajax_add_to_cart', 'add_to_cart_handler');
 add_action('wp_ajax_nopriv_add_to_cart', 'add_to_cart_handler');
-// get cart details
+
 function get_cart_details()
 {
-    // Check if the request is valid and is coming via AJAX
+    
     if (!defined('DOING_AJAX') || !DOING_AJAX) {
         wp_send_json_error(['message' => 'Invalid request.']);
         return;
@@ -104,8 +104,7 @@ function get_cart_details()
 }
 add_action('wp_ajax_get_cart_details', 'get_cart_details');
 add_action('wp_ajax_nopriv_get_cart_details', 'get_cart_details');
-//get cart details 
-//promo code function
+
 function submit_promo_code()
 {
     if (!defined('DOING_AJAX') || !DOING_AJAX) {
@@ -136,20 +135,16 @@ function submit_promo_code()
 }
 add_action('wp_ajax_submit_promo_code', 'submit_promo_code');
 add_action('wp_ajax_nopriv_submit_promo_code', 'submit_promo_code');
-//end promo code function
-//get checkout options 
+
 function get_checkout_options()
 {
-    // Validate if the request is an AJAX call
     if (!defined('DOING_AJAX') || !DOING_AJAX) {
         wp_send_json_error(['message' => 'Invalid request.']);
     }
-    // Sanitize session ID
     $session_id = isset($_POST['session_id']) ? sanitize_text_field($_POST['session_id']) : '';
     if (empty($session_id)) {
         wp_send_json_error(['message' => 'Session ID is required.']);
     }
-    // Define API path and cache key
     $method = 'GET';
     $path = "/checkout.json/options/shopping-cart/{$session_id}";
     $response = authenticateBokunApi($method, $path);
@@ -157,8 +152,7 @@ function get_checkout_options()
 }
 add_action('wp_ajax_get_checkout_options', 'get_checkout_options');
 add_action('wp_ajax_nopriv_get_checkout_options', 'get_checkout_options');
-// end get checkout options
-//retrive cart question  
+
 function remove_activity_form_cart()
 {
     if (!defined('DOING_AJAX') || !DOING_AJAX) {
@@ -182,9 +176,7 @@ function remove_activity_form_cart()
 }
 add_action('wp_ajax_remove_activity_form_cart', 'remove_activity_form_cart');
 add_action('wp_ajax_nopriv_remove_activity_form_cart', 'remove_activity_form_cart');
-//end retrive cart question
-// process checkout
-// Register the activation hook
+
 function bokun_checkout_submit_handler()
 {
     if (!defined('DOING_AJAX') || !DOING_AJAX) {

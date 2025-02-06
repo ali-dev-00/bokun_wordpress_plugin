@@ -28,31 +28,34 @@ jQuery(function ($) {
   }
   function storeActivityTabData() {
     const sessionId = getOrCreateSessionId();
+    
     if (!sessionId) {
-      console.error("❌ Invalid session ID.");
-      return;
+        console.error("❌ Invalid session ID.");
+        return;
     }
-    console.log("🔄 Storing activityTabData:", activityTabData);
-    console.log("📌 Type of activityTabData:", typeof activityTabData);
 
+    console.log(typeof activityTabData , "actiivtiytabdata");
+    console.log("🔄 Storing activityTabData:", activityTabData);
+    
     $.ajax({
-      url: bokunAjax.ajaxUrl,
-      method: "POST",
-      data: {
-        action: "store_activity_tab_data",
-        session_id: sessionId,
-        activityTabData: JSON.stringify(activityTabData), // Send as JSON string
-      },
-      dataType: "json",
-      success: function (response) {
-        console.log("✅ Successfully stored activityTabData:", response.data);
-      },
-      error: function (jqXHR, textStatus, errorThrown) {
-        console.error(`❌ Failed to store activity data: ${textStatus}, ${errorThrown}`);
-        console.error("📌 Response Text:", jqXHR.responseText);
-      },
+        url: bokunAjax.ajaxUrl,
+        method: "POST",
+        data: {
+            action: "store_activity_tab_data",
+            session_id: sessionId,
+            activityTabData: JSON.stringify(activityTabData), 
+        },
+        dataType: "json",
+        success: function (response) {
+            console.log("✅ Successfully stored activityTabData:", response);
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.error(`❌ Failed to store activity data: ${textStatus}, ${errorThrown}`);
+            console.error("📌 Response Text:", jqXHR.responseText);
+        },
     });
-  }
+}
+
 
   function getStoredData() {
     const sessionId = getOrCreateSessionId();
@@ -501,7 +504,7 @@ jQuery(function ($) {
                         const extraConfigs = rate?.extraConfigs.map((config) => {
                           if (config.pricedPerPerson === false) {
                             bookingType = "GROUP";
-                            validatedMaxPerBooking = 1000;
+                            validatedMaxPerBooking = 1;
                             console.log("pricedPerPerson", config.pricedPerPerson);
                           }
                         })
