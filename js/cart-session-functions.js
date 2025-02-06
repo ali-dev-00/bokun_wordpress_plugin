@@ -1,30 +1,58 @@
 
 var activityTabData = [];
 var mainContactDetails = {};
-
+var checkoutTabData = [];
+var bookingDetailsPassengers;
 jQuery(function ($) {
 
   function storeMainContactDetails(mainContactDetails) {
     $.ajax({
-        url: bokunAjax.ajaxUrl,
-        method: "POST",
-        data: {
-            action: "store_main_contact_details",
-            session_id: localStorage.getItem("bokunSessionId"),
-            mainContactDetails: JSON.stringify(mainContactDetails),
-        },
-        success: function (response) {
-            if (response.success) {
-                console.log("Successfully stored mainContactDetails in transient:", response.data);
-            } else {
-                console.error("Error storing main contact details.");
-            }
-        },
-        error: function () {
-            console.error("Failed to store main contact details.");
-        },
+      url: bokunAjax.ajaxUrl,
+      method: "POST",
+      data: {
+        action: "store_main_contact_details",
+        session_id: localStorage.getItem("bokunSessionId"),
+        mainContactDetails: JSON.stringify(mainContactDetails),
+      },
+      success: function (response) {
+        if (response.success) {
+          console.log("Successfully stored mainContactDetails in transient:", response.data);
+        } else {
+          console.error("Error storing main contact details.");
+        }
+      },
+      error: function () {
+        console.error("Failed to store main contact details.");
+      },
     });
-}
+  }
+  function storeActivityTabData() {
+    const sessionId = getOrCreateSessionId();
+    if (!sessionId) {
+      console.error("❌ Invalid session ID.");
+      return;
+    }
+    console.log("🔄 Storing activityTabData:", activityTabData);
+    console.log("📌 Type of activityTabData:", typeof activityTabData);
+
+    $.ajax({
+      url: bokunAjax.ajaxUrl,
+      method: "POST",
+      data: {
+        action: "store_activity_tab_data",
+        session_id: sessionId,
+        activityTabData: JSON.stringify(activityTabData), // Send as JSON string
+      },
+      dataType: "json",
+      success: function (response) {
+        console.log("✅ Successfully stored activityTabData:", response.data);
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.error(`❌ Failed to store activity data: ${textStatus}, ${errorThrown}`);
+        console.error("📌 Response Text:", jqXHR.responseText);
+      },
+    });
+  }
 
   function getStoredData() {
     const sessionId = getOrCreateSessionId();
@@ -59,42 +87,42 @@ jQuery(function ($) {
   }
 
   getStoredData();
-  function storeActivityTabData() {
-    const sessionId = getOrCreateSessionId();
-    if (!sessionId) {
-      console.error("❌ Invalid session ID.");
+
+  function fillForm(moveNext = false) {
+    if (!mainContactDetails || !Array.isArray(mainContactDetails)) {
       return;
     }
+    const contactData = mainContactDetails.reduce((acc, item) => {
+      acc[item.questionId] = item.values[0]; // Store the first value
+      return acc;
+    }, {});
 
-    console.log("🔄 Storing activityTabData:", activityTabData);
-    console.log("📌 Type of activityTabData:", typeof activityTabData);
+    $("#contactForm")
+      .find("input, textarea, select")
+      .each(function () {
+        const $field = $(this);
+        const questionId = $field.data("question-id");
 
+        if (!questionId || contactData[questionId] === undefined) return;
 
+        const value = contactData[questionId];
 
-    // Make AJAX request
-    $.ajax({
-      url: bokunAjax.ajaxUrl,
-      method: "POST",
-      data: {
-        action: "store_activity_tab_data",
-        session_id: sessionId,
-        activityTabData: JSON.stringify(activityTabData), // Send as JSON string
-      },
-      dataType: "json",
-      success: function (response) {
-        console.log("✅ Successfully stored activityTabData:", response.data);
-      },
-      error: function (jqXHR, textStatus, errorThrown) {
-        console.error(`❌ Failed to store activity data: ${textStatus}, ${errorThrown}`);
-        console.error("📌 Response Text:", jqXHR.responseText);
-      },
-    });
+        if ($field.is(":checkbox")) {
+          $field.prop("checked", value === "1" || value === "true");
+        } else if ($field.is(":radio")) {
+          $(`input[name="${$field.attr("name")}"][value="${value}"]`).prop("checked", true);
+        } else if (questionId === "phoneNumber" && window.iti) {
+          window.iti.setNumber(value);
+        } else {
+          $field.val(value);
+        }
+      });
+
+    if (moveNext) {
+      moveToNextStep();
+    }
   }
-
-
-
   function fillActivityTabs() {
-    // Get all elements that represent activity steps
     document.querySelectorAll(".custom-checkout-step").forEach((tabElement) => {
       let activityKey = tabElement.getAttribute("data-index"); // Get `data-index` attribute
 
@@ -102,8 +130,8 @@ jQuery(function ($) {
 
       let data = activityTabData[activityKey];
       let keyParts = activityKey.split("_");
-      let activityId = keyParts[0]; // Extract Activity ID
-      let index = keyParts[1]; // Extract index
+      let activityId = keyParts[0];
+      let index = keyParts[1];
 
       console.log(`🔄 Populating data for Activity ${activityKey}`);
 
@@ -117,9 +145,9 @@ jQuery(function ($) {
           );
 
           if (matchedLi) {
-            $(matchedLi).trigger("click"); // Trigger click event
-            $(matchedLi).addClass("selected"); // Ensure the class is set
-            $(matchedLi).parent().removeClass("show"); // Hide dropdown after selection
+            $(matchedLi).trigger("click");
+            $(matchedLi).addClass("selected");
+            $(matchedLi).parent().removeClass("show");
           }
         }
 
@@ -128,7 +156,6 @@ jQuery(function ($) {
           pickupInput.value = pickupTitle;
         }
 
-        // Ensure room number visibility is updated
         setTimeout(() => {
           const $roomNumberContainer = $(`#pickupSearch_${index}RoomNumberContainer`);
           const $roomNumberInput = $(`#pickupSearch_${index}RoomNumber`);
@@ -188,9 +215,6 @@ jQuery(function ($) {
           $whereInput.hide();
         }, 200);
       }
-
-
-
       if (data.answers && data.answers.length > 0) {
         data.answers.forEach(function (answer) {
           var inputEl = tabElement.querySelector(`[data-question-id="${answer.questionId}"]`);
@@ -214,83 +238,8 @@ jQuery(function ($) {
         });
       }
 
-      // if (data.pickupRoomNumber && data.pickupRoomNumber.length > 0) {
-      //   const pickupRoomInput = tabElement.querySelector(`#pickupSearch_${index}RoomNumber`);
-      //   if (pickupRoomInput) {
-      //     pickupRoomInput.value = data.pickupRoomNumber[0].values[0];
-      //     const pickupRoomContainer = document.getElementById(`pickupSearch_${index}RoomNumberContainer`);
-      //     if (pickupRoomContainer) {
-      //       pickupRoomContainer.style.display = "block";
-      //     }
-      //   }
-      // }
 
-      // if (data.dropoffRoomNumber && data.dropoffRoomNumber.length > 0) {
-      //   const dropoffRoomInput = tabElement.querySelector(`#dropoffSearch_${index}RoomNumber`);
-      //   if (dropoffRoomInput) {
-      //     dropoffRoomInput.value = data.dropoffRoomNumber[0].values[0];
-      //     const dropoffRoomContainer = document.getElementById(`dropoffSearch_${index}RoomNumberContainer`);
-      //     if (dropoffRoomContainer) {
-      //       dropoffRoomContainer.style.display = "block";
-      //     }
-      //   }
-      // }
     });
-  }
-
-//   function renewBookingIds(checkoutOptionsResponse) {
-//     var checkoutExperience = checkoutOptionsResponse.data.questions.activityBookings;
-
-//     checkoutExperience.forEach((activity, index) => {
-//         const activityBookingId = activity.bookingId; // New activity bookingId
-//         const passengers = activity.passengers; // New passenger bookingIds
-
-//         // Construct the key to find the activity in activityTabData
-//         const activityKey = `${activity.activityId}_${index}`;
-
-//         if (activityTabData.hasOwnProperty(activityKey)) {
-//             console.log(`🔄 Updating Activity: ${activityKey}`);
-
-//             // Update the main booking ID
-//             activityTabData[activityKey].bookingId = activityBookingId;
-
-//             // Update passenger booking IDs
-//             activity.passengers.forEach((passenger, passengerIndex) => {
-//                 if (activityTabData[activityKey].passengers[passengerIndex]) {
-//                     activityTabData[activityKey].passengers[passengerIndex].bookingId = passenger.bookingId;
-//                 }
-//             });
-
-//             console.log("✅ Updated Activity Data:", activityTabData[activityKey]);
-//         } else {
-//             console.warn(`⚠️ Activity Key Not Found: ${activityKey}`);
-//         }
-//     });
-// }
-
-
-  function fillForm(moveNext = false) {
-    console.log("fill form function called");
-    if (!mainContactDetails) {
-      console.log("No form data found!");
-      return;
-    }
-    $("#contactForm")
-      .find("input, textarea, select")
-      .each(function () {
-        const questionId = $(this).data("question-id");
-        if (questionId && mainContactDetails[questionId] !== undefined) {
-          const value = mainContactDetails[questionId];
-          if (questionId === "phoneNumber" && window.iti) {
-            window.iti.setNumber(value);
-          } else {
-            $(this).val(value);
-          }
-        }
-      });
-    if (moveNext === true) {
-      moveToNextStep();
-    }
   }
 
   function formatDateToISO(dateString) {
@@ -322,6 +271,8 @@ jQuery(function ($) {
     const dayPadded = String(day).padStart(2, "0");
     return `${year}-${month}-${dayPadded}`;
   }
+
+
   async function handleCheckoutModalApiCalls(
     flag = "add",
     productConfirmationCode = null,
@@ -457,10 +408,8 @@ jQuery(function ($) {
         }
         if (handleExtrasSection === true) {
           // update extras quantity after right section and update right section 
-          checkoutModalRightSection(checkoutOptionsResponse, cartResponse),
-          //handleExtras(cartResponse);
-          //renew booking ids after adding extras for activity
-          initializeSubmitCheckout(checkoutOptionsResponse);
+          checkoutModalRightSection(checkoutOptionsResponse, cartResponse);
+
         } else {
           handleCheckoutModal(
             pickupPlacesResponse,
@@ -470,11 +419,12 @@ jQuery(function ($) {
           $(".custom-checkout-modal-overlay").css("display", "flex");
           $(".custom-bokun-modal-content").hide();
           $("body").css("overflow", "hidden");
-         // handleExtras(cartResponse);
+
         }
         handleExtras(cartResponse);
         fillActivityTabs();
-
+        const activityBookings = checkoutOptionsResponse.data.questions.activityBookings;
+        bookingDetailsPassengers = activityBookings;
       } else {
         console.error("Add to cart failed.", cartResponse);
       }
@@ -530,7 +480,6 @@ jQuery(function ($) {
                   console.warn(`No matching rate found for rateId: ${rateId}`);
                   return;
                 }
-
                 const extrasHTML = bookableExtras
                   .map((extra, extraIndex) => {
                     const {
@@ -1531,6 +1480,10 @@ jQuery(function ($) {
             I have read and consent to the <a href="#" class="custom-checkout-step-4-link">privacy policy</a>
           </label>
         </div>
+        <small class="booking-warning">
+            ⚠️ Booking cannot be processed right now. Please try again later or refresh your page.
+        </small>
+
         <div class="custom-checkout-step-4-button-container">
           <button id="confirmButton" class="custom-checkout-step-4-button" disabled>
           </button>
@@ -1687,7 +1640,7 @@ jQuery(function ($) {
             addedQuestions.add(questionId);
           }
         });
-        console.log("Form Data:", formDataArray); 
+        console.log("Form Data:", formDataArray);
         mainContactDetails = formDataArray;
         storeMainContactDetails(mainContactDetails);
       };
@@ -1814,14 +1767,14 @@ jQuery(function ($) {
       const parentPickupDropoffDiv = `#custom-checkout-pickup-dropoff_${index}`;
 
       if (activityBooking) {
-        const { pickupQuestions = [], dropoffQuestions = [], passengers = [], questions = [] , bookingId } = activityBooking;
+        const { pickupQuestions = [], dropoffQuestions = [], passengers = [], questions = [], bookingId } = activityBooking;
 
         // ✅ Correctly check if pickup/dropoff exist
         const hasPickup = Array.isArray(pickupQuestions) && pickupQuestions.length > 0;
         const hasDropoff = Array.isArray(dropoffQuestions) && dropoffQuestions.length > 0;
         const hasPassengers = passengers.length > 0;
         const hasActivityQuestions = questions.length > 0;
-        
+
         console.log("Has Pickup?", hasPickup, "| Has Dropoff?", hasDropoff);
 
         const pickupDivId = `pickupDiv_${index}`;
@@ -1927,6 +1880,16 @@ jQuery(function ($) {
             ...(processedPassengers && { passengers: processedPassengers }),
             ...(activityBookingId && { bookingId: activityBookingId }),
           };
+          checkoutTabData = checkoutTabData || {}; // Ensure it's initialized
+          checkoutTabData[activityIdIndexKey] = {
+            ...(activityAnswers && { answers: activityAnswers }),
+            ...(pickupAnswers && { pickupAnswers }),
+            ...(askForPickupRoom && pickupRoomNumberInput && { pickRoomNumber: pickupRoomNumberInput }),
+            ...(dropoffAnswers && { dropoffAnswers }),
+            ...(askForDropoffRoom && dropoffRoomNumberInput && { dropoffRoomNumber: dropoffRoomNumberInput }),
+            ...(processedPassengers && { passengers: processedPassengers }),
+            ...(activityBookingId && { bookingId: activityBookingId }),
+          };
 
 
           storeActivityTabData();
@@ -2012,76 +1975,101 @@ jQuery(function ($) {
       });
     });
     fillActivityTabs();
-   
-
-
   }
-  function initializeSubmitCheckout(checkoutOptionsResponse){
-    var checkoutExperience =  checkoutOptionsResponse.data.options[0].invoice.productInvoices;
-    $(document).on("click", "#confirmButton", async function () {
-      var $button = $(this);
-      $button.prop("disabled", true).html(`
-    
-          <span>Processing...</span>
-      `);
+
+
+
+  $(document).on("click", "#confirmButton", async function () {
+    var $button = $(this);
+    $button.prop("disabled", true).html(`
   
-      try {
-        await submitCheckout(
-          formDataArray,
-          checkoutExperience,
-          activityTabData
-        );
-      } catch (error) {
-        console.error("Checkout failed:", error);
-        $button.prop("disabled", false).html(`Reserve and Pay Now ${checkoutOptionsResponse.data.options[0].formattedAmount}`);
-      }
-    });
-  }
+        <span>Processing...</span>
+    `);
+    try {
+      await submitCheckout(
+        bookingDetailsPassengers,
+      );
+    } catch (error) {
+      console.error("Checkout failed:", error);
+    }
+  });
 
   async function submitCheckout(
-    formDataArray,
     checkoutExperience,
-    activityTabData
   ) {
-    console.log("Activity tab data from submit checkout:", activityTabData);
 
+    console.log("Activity tab data from submit checkout:", checkoutTabData);
+    if (!checkoutTabData) {
+      console.log("checkout tab data is not initialized");
+      return;
+    }
+    const formDataArray = mainContactDetails;
     const activityBookings = checkoutExperience.map((experience, index) => {
-      const activityId = experience.product.id;
-      
+      const activityId = experience.activityId;
       const activityKey = `${activityId}_${index}`;
-      const activityData = activityTabData[activityKey] || {};
-      // Extract data from activityTabData
-      const bookingId = activityData.bookingId;
+      const activityData = checkoutTabData[activityKey] || {};
+      const bookingId = experience.bookingId;
       const pickupAnswers = activityData.pickupAnswers || [];
       const dropoffAnswers = activityData.dropoffAnswers || [];
-      const passengers = activityData.passengers || [];
       const answers = activityData.answers || [];
+      const passengers = activityData.passengers || [];
+      const activityPassengers = experience.passengers || [];
+
+
+      const bookingIdTracker = {};
+
+      const updatedPassengers = passengers.map(passenger => {
+        const { pricingCategoryId } = passenger;
+
+
+        const availableBookings = activityPassengers.filter(
+          actualPassenger => actualPassenger.pricingCategoryId === pricingCategoryId
+        );
+
+        if (availableBookings.length > 0) {
+          if (!bookingIdTracker[pricingCategoryId]) {
+            bookingIdTracker[pricingCategoryId] = 0;
+          }
+          const assignedBooking = availableBookings[bookingIdTracker[pricingCategoryId] % availableBookings.length];
+          const updatedPassenger = { ...passenger, bookingId: assignedBooking.bookingId };
+          bookingIdTracker[pricingCategoryId]++;
+
+          return updatedPassenger;
+        }
+        return passenger;
+      });
+
+      console.log("Original passengers:", passengers);
+      console.log("Actual activity passengers:", activityPassengers);
+      console.log("Updated passengers with correct bookingIds:", updatedPassengers);
+
       return {
         activityId,
         bookingId,
-        ...(pickupAnswers.length > 0 && { pickupAnswers }),
-        ...(dropoffAnswers.length > 0 && { dropoffAnswers }),
-        ...(passengers.length > 0 && { passengers }),
-        ...(answers.length > 0 && { answers }),
+        ...(pickupAnswers.length && { pickupAnswers }),
+        ...(dropoffAnswers.length && { dropoffAnswers }),
+        ...(updatedPassengers.length && { passengers: updatedPassengers }),
+        ...(answers.length && { answers }),
       };
+
     });
 
-    // Create the shopping cart
     const shoppingCart = {
       uuid: getOrCreateSessionId(),
       bookingAnswers: {
         mainContactDetails: formDataArray,
         activityBookings: activityBookings.filter(
           (booking) =>
-            booking.pickupAnswers ||
-            booking.dropoffAnswers ||
-            booking.passengers
+            booking.pickupAnswers.length > 0 ||
+            booking.dropoffAnswers.length > 0 ||
+            booking.passengers.length > 0
         ),
       },
     };
 
+
     console.log("Final Shopping Cart:", shoppingCart);
-    // return;
+
     $.ajax({
       url: bokunAjax.ajaxUrl,
       method: "POST",
@@ -2102,7 +2090,12 @@ jQuery(function ($) {
           console.log("Redirecting to:", response.data.redirect_url);
         } else {
           console.error("Redirect URL not found in response:", response);
+
+          // Show the warning message using jQuery
+          $(".booking-warning").attr("style", "display: block !important;");
+
         }
+
       },
       error: (error) => {
         console.error("AJAX request failed:", error);

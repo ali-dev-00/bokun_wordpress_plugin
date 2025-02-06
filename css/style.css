@@ -1599,3 +1599,12 @@
     line-height: 16px;
     color: rgb(150, 150, 150);
 }
+.booking-warning {
+    color: red !important ;
+    font-weight: bold !important ;
+    display: flex !important ;
+    align-items: center !important ;
+    gap: 5px !important ; /* Space between icon and text */
+    font-size: 14px !important ;
+    display: none !important ;
+}
