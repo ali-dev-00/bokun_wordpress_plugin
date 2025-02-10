@@ -279,13 +279,15 @@ jQuery(function ($) {
   }
 
 
+  let previousCheckoutOptionsResponse = null; // To store the previous response
+
   async function handleCheckoutModalApiCalls(
     flag = "add",
     productConfirmationCode = null,
     bookableExtras = null,
     handleExtrasSection = false
   ) {
-    console.log("api calls made");
+    console.log("API calls made");
     const $button = $(".checkoutAction");
     var activityId = $button.data("activity-id");
     var rateId = $button.data("rate-id");
@@ -294,6 +296,7 @@ jQuery(function ($) {
     var date = $button.data("date");
     var startTimeId = $selectedTimeSlot.data("starttimeid");
     date = formatDateToISO(date);
+  
     if (
       (bookableExtras === null && !activityId) ||
       !rateId ||
@@ -310,14 +313,16 @@ jQuery(function ($) {
         passengers
       );
     }
+  
     const sessionId = getOrCreateSessionId();
     try {
+      let requestDataForCart;
       if (bookableExtras !== null && flag === "add") {
-        var requestDataForCart = bookableExtras;
+        requestDataForCart = bookableExtras;
         console.log("if condition runs");
       } else if (flag === "add") {
         console.log("else condition runs");
-        var requestDataForCart = {
+        requestDataForCart = {
           action: "add_to_cart",
           session_id: sessionId,
           activity_id: activityId,
@@ -329,7 +334,9 @@ jQuery(function ($) {
           currency: localStorage.getItem("currency"),
         };
       }
+  
       console.log("requestDataForCart for request", requestDataForCart);
+  
       const addToCart = () =>
         $.ajax({
           url: bokunAjax.ajaxUrl,
@@ -359,7 +366,6 @@ jQuery(function ($) {
             currency: localStorage.getItem("currency"),
           },
         });
-
       const fetchPickupPlaces = () =>
         $.ajax({
           url: bokunAjax.ajaxUrl,
@@ -382,6 +388,7 @@ jQuery(function ($) {
             currency: localStorage.getItem("currency"),
           },
         });
+  
       let cartResponse;
       if (flag === "remove") {
         cartResponse = await removeActivityFromCart();
@@ -392,44 +399,67 @@ jQuery(function ($) {
       if (flag === "show") {
         cartResponse = await fetchCartDetails();
       }
+  
       if (cartResponse.success) {
         const totalPrice = cartResponse.data.totalPrice ?? 0;
         if (totalPrice <= 0) {
-
-          // $(".custom-bokun-modal").css("display", "none");
-          // $(".custom-checkout-modal-overlay").fadeOut();
-          // $("body").css("overflow", "auto");
-          const message = response.data.fields.errorResponse ?? "Invalid Data";
-          $('.error-message-cart').html(message);
+          const message = cartResponse.data.fields.errorResponse ?? "Invalid Data";
+          $(".error-message-cart").html(message);
           console.log("Cart is empty, displaying error message.");
           return;
-
         }
+  
         const pickupPlacesResponse = await fetchPickupPlaces();
         const checkoutOptionsResponse = await fetchCheckoutOptions();
-
+  
         if (!pickupPlacesResponse || !checkoutOptionsResponse) {
           console.error("One or more API calls failed.");
           return;
         }
+  
+        // Rearrange productInvoices and activityBookings if there's a previous response
+        if (flag === "add" && previousCheckoutOptionsResponse) {
+          checkoutOptionsResponse.data.options[0].invoice.productInvoices =
+            rearrangeAndTrackChanges(
+              previousCheckoutOptionsResponse.data.options[0].invoice.productInvoices,
+              checkoutOptionsResponse.data.options[0].invoice.productInvoices,
+              "productBookingId"
+            );
+  
+          checkoutOptionsResponse.data.questions.activityBookings =
+            rearrangeAndTrackChanges(
+              previousCheckoutOptionsResponse.data.questions.activityBookings,
+              checkoutOptionsResponse.data.questions.activityBookings,
+              "bookingId"
+            );
+        }
+  
         if (handleExtrasSection === true) {
-          // update extras quantity after right section and update right section 
-          checkoutModalRightSection(checkoutOptionsResponse, cartResponse);
-
+          checkoutModalRightSection(
+            checkoutOptionsResponse,
+            cartResponse,
+            rearrangeAndTrackChanges
+          );
         } else {
           handleCheckoutModal(
             pickupPlacesResponse,
             checkoutOptionsResponse,
-            cartResponse
+            cartResponse,
+            rearrangeAndTrackChanges
           );
           $(".custom-checkout-modal-overlay").css("display", "flex");
           $(".custom-bokun-modal-content").hide();
           $("body").css("overflow", "hidden");
-
         }
-        handleExtras(cartResponse);
+  
+        handleExtras(cartResponse, rearrangeAndTrackChanges);
         fillActivityTabs();
-        const activityBookings = checkoutOptionsResponse.data.questions.activityBookings;
+  
+        // Store current response as previous response for next call
+        previousCheckoutOptionsResponse = checkoutOptionsResponse;
+  
+        const activityBookings =
+          checkoutOptionsResponse.data.questions.activityBookings;
         bookingDetailsPassengers = activityBookings;
       } else {
         console.error("Add to cart failed.", cartResponse);
@@ -438,6 +468,24 @@ jQuery(function ($) {
       console.error("An error occurred during API calls:", error);
     }
   }
+  
+  // Helper function to rearrange arrays and track differences
+  function rearrangeAndTrackChanges(previousArray, currentArray, key) {
+    const currentArrayMap = new Map(currentArray.map((item) => [item[key], item]));
+  
+    // Rearrange based on the previous array's order
+    const rearrangedArray = previousArray
+      .map((prevItem) => currentArrayMap.get(prevItem[key]))
+      .filter(Boolean); // Filter out undefined items (removed items)
+  
+    // Add any new items that were not in the previous array
+    const addedItems = currentArray.filter(
+      (item) => !previousArray.some((prevItem) => prevItem[key] === item[key])
+    );
+  
+    return [...rearrangedArray, ...addedItems];
+  }
+  
   function handleExtras(cartResponse) {
     console.log("Loop running for extras...");
     const activityList = cartResponse.data.activityBookings;
