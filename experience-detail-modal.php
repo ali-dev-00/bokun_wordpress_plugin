@@ -384,6 +384,20 @@ function fetch_experience_details()
                                             </div>
                                         </div>
                                     <?php endif; ?>
+                                    <?php if (!empty($response['supportedAccessibilityTypes'])): ?>
+                                        <div class="custom-bokun-categories-section">
+                                            <h4>Supported accessibility</h4>
+                                            <div class="custom-bokun-categories-tags">
+                                                <?php if (!empty($response['supportedAccessibilityTypes']) && is_array($response['supportedAccessibilityTypes'])): ?>
+                                                    <?php foreach ($response['supportedAccessibilityTypes'] as $category): ?>
+                                                        <span class="custom-bokun-tag">
+                                                            <?php echo htmlspecialchars(ucwords(str_replace('_', ' ', strtolower($category)))); ?>
+                                                        </span>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             <?php endif; ?>
                         </div>
