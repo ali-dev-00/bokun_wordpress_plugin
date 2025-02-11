@@ -280,244 +280,260 @@ jQuery(function ($) {
 
 
   let initialCheckoutOptionsResponse = null;
-let initialCartResponse = null; // Stores the first cart response for order tracking
-
-async function handleCheckoutModalApiCalls(
-  flag = "add",
-  productConfirmationCode = null,
-  bookableExtras = null,
-  handleExtrasSection = false
-) {
-  console.log("API calls made");
-  const $button = $(".checkoutAction");
-  var activityId = $button.data("activity-id");
-  var rateId = $button.data("rate-id");
-  var $selectedTimeSlot = $(".custom-bokun-time-slot.selected");
-  var passengers = JSON.parse($button.attr("data-pricing-category-id"));
-  var date = $button.data("date");
-  var startTimeId = $selectedTimeSlot.data("starttimeid");
-  date = formatDateToISO(date);
-
-  if (
-    (bookableExtras === null && !activityId) ||
-    !rateId ||
-    !startTimeId ||
-    !date ||
-    !passengers
+  let initialCartResponse = null; // Stores the first cart response for order tracking
+  
+  async function handleCheckoutModalApiCalls(
+    flag = "add",
+    productConfirmationCode = null,
+    bookableExtras = null,
+    handleExtrasSection = false
   ) {
-    console.log(
-      "Missing required fields:",
-      activityId,
-      rateId,
-      startTimeId,
-      date,
-      passengers
-    );
-  }
-
-  const sessionId = getOrCreateSessionId();
-  try {
-    let requestDataForCart;
-    if (bookableExtras !== null && flag === "add") {
-      requestDataForCart = bookableExtras;
-      console.log("if condition runs");
-    } else if (flag === "add") {
-      console.log("else condition runs");
-      requestDataForCart = {
-        action: "add_to_cart",
-        session_id: sessionId,
-        activity_id: activityId,
-        rate_id: rateId,
-        start_time_id: startTimeId,
-        date: date,
-        passengers: passengers,
-        language: localStorage.getItem("language"),
-        currency: localStorage.getItem("currency"),
-      };
+    console.log("API calls made");
+    const $button = $(".checkoutAction");
+    var activityId = $button.data("activity-id");
+    var rateId = $button.data("rate-id");
+    var $selectedTimeSlot = $(".custom-bokun-time-slot.selected");
+    var passengers = JSON.parse($button.attr("data-pricing-category-id"));
+    var date = $button.data("date");
+    var startTimeId = $selectedTimeSlot.data("starttimeid");
+    date = formatDateToISO(date);
+  
+    if (
+      (bookableExtras === null && !activityId) ||
+      !rateId ||
+      !startTimeId ||
+      !date ||
+      !passengers
+    ) {
+      console.log(
+        "Missing required fields:",
+        activityId,
+        rateId,
+        startTimeId,
+        date,
+        passengers
+      );
     }
-
-    console.log("requestDataForCart for request", requestDataForCart);
-
-    const addToCart = () =>
-      $.ajax({
-        url: bokunAjax.ajaxUrl,
-        method: "POST",
-        data: requestDataForCart,
-      });
-    const fetchCartDetails = () =>
-      $.ajax({
-        url: bokunAjax.ajaxUrl,
-        method: "POST",
-        data: {
-          action: "get_cart_details",
+  
+    const sessionId = getOrCreateSessionId();
+    try {
+      let requestDataForCart;
+      if (bookableExtras !== null && flag === "add") {
+        requestDataForCart = bookableExtras;
+        console.log("if condition runs");
+      } else if (flag === "add") {
+        console.log("else condition runs");
+        requestDataForCart = {
+          action: "add_to_cart",
           session_id: sessionId,
+          activity_id: activityId,
+          rate_id: rateId,
+          start_time_id: startTimeId,
+          date: date,
+          passengers: passengers,
           language: localStorage.getItem("language"),
           currency: localStorage.getItem("currency"),
-        },
-      });
-    const removeActivityFromCart = () =>
-      $.ajax({
-        url: bokunAjax.ajaxUrl,
-        method: "POST",
-        data: {
-          action: "remove_activity_form_cart",
-          session_id: sessionId,
-          product_confirmation_code: productConfirmationCode,
-          language: localStorage.getItem("language"),
-          currency: localStorage.getItem("currency"),
-        },
-      });
-    const fetchPickupPlaces = () =>
-      $.ajax({
-        url: bokunAjax.ajaxUrl,
-        method: "POST",
-        data: {
-          action: "checkout_pick_up_places",
-          language: localStorage.getItem("language"),
-          currency: localStorage.getItem("currency"),
-          experience_id: activityId,
-        },
-      });
-    const fetchCheckoutOptions = () =>
-      $.ajax({
-        url: bokunAjax.ajaxUrl,
-        method: "POST",
-        data: {
-          action: "get_checkout_options",
-          session_id: sessionId,
-          language: localStorage.getItem("language"),
-          currency: localStorage.getItem("currency"),
-        },
-      });
-
-    let cartResponse;
-    if (flag === "remove") {
-      cartResponse = await removeActivityFromCart();
-    }
-    if (flag === "add") {
-      cartResponse = await addToCart();
-    }
-    if (flag === "show") {
-      cartResponse = await fetchCartDetails();
-    }
-
-    if (cartResponse.success) {
-      const totalPrice = cartResponse.data.totalPrice ?? 0;
-      if (totalPrice <= 0) {
-        const message = cartResponse.data.fields.errorResponse ?? "Invalid Data";
-        $(".error-message-cart").html(message);
-        console.log("Cart is empty, displaying error message.");
-        return;
+        };
       }
-
-      const pickupPlacesResponse = await fetchPickupPlaces();
-      const checkoutOptionsResponse = await fetchCheckoutOptions();
-
-      if (!pickupPlacesResponse || !checkoutOptionsResponse) {
-        console.error("One or more API calls failed.");
-        return;
+  
+      console.log("requestDataForCart for request", requestDataForCart);
+  
+      const addToCart = () =>
+        $.ajax({
+          url: bokunAjax.ajaxUrl,
+          method: "POST",
+          data: requestDataForCart,
+        });
+      const fetchCartDetails = () =>
+        $.ajax({
+          url: bokunAjax.ajaxUrl,
+          method: "POST",
+          data: {
+            action: "get_cart_details",
+            session_id: sessionId,
+            language: localStorage.getItem("language"),
+            currency: localStorage.getItem("currency"),
+          },
+        });
+      const removeActivityFromCart = () =>
+        $.ajax({
+          url: bokunAjax.ajaxUrl,
+          method: "POST",
+          data: {
+            action: "remove_activity_form_cart",
+            session_id: sessionId,
+            product_confirmation_code: productConfirmationCode,
+            language: localStorage.getItem("language"),
+            currency: localStorage.getItem("currency"),
+          },
+        });
+      const fetchPickupPlaces = () =>
+        $.ajax({
+          url: bokunAjax.ajaxUrl,
+          method: "POST",
+          data: {
+            action: "checkout_pick_up_places",
+            language: localStorage.getItem("language"),
+            currency: localStorage.getItem("currency"),
+            experience_id: activityId,
+          },
+        });
+      const fetchCheckoutOptions = () =>
+        $.ajax({
+          url: bokunAjax.ajaxUrl,
+          method: "POST",
+          data: {
+            action: "get_checkout_options",
+            session_id: sessionId,
+            language: localStorage.getItem("language"),
+            currency: localStorage.getItem("currency"),
+          },
+        });
+  
+      let cartResponse;
+      if (flag === "remove") {
+        cartResponse = await removeActivityFromCart();
       }
-
-      // Storing initial responses for comparison
-      if (!initialCheckoutOptionsResponse) {
-        initialCheckoutOptionsResponse = JSON.parse(
-          JSON.stringify(checkoutOptionsResponse)
-        );
+      if (flag === "add") {
+        cartResponse = await addToCart();
       }
-      if (!initialCartResponse) {
-        initialCartResponse = JSON.parse(JSON.stringify(cartResponse));
-      } else {
-        // **Rearrange cartResponse based on `activityId`**
-        if (
-          !arraysMatch(
-            initialCartResponse.data.activityBookings,
-            cartResponse.data.activityBookings,
-            "activity.id"
-          )
-        ) {
-          cartResponse.data.activityBookings = rearrangeAccordingToInitialResponse(
-            initialCartResponse.data.activityBookings,
-            cartResponse.data.activityBookings,
-            "activity.id"
-          );
+      if (flag === "show") {
+        cartResponse = await fetchCartDetails();
+      }
+  
+      if (cartResponse.success) {
+        const totalPrice = cartResponse.data.totalPrice ?? 0;
+        if (totalPrice <= 0) {
+          const message = cartResponse.data.fields.errorResponse ?? "Invalid Data";
+          $(".error-message-cart").html(message);
+          console.log("Cart is empty, displaying error message.");
+          return;
         }
-
-        // **Rearrange checkoutOptionsResponse**
-        if (
-          !arraysMatch(
-            initialCheckoutOptionsResponse.data.questions.activityBookings,
-            checkoutOptionsResponse.data.questions.activityBookings,
-            "activityId"
-          )
-        ) {
-          checkoutOptionsResponse.data.questions.activityBookings =
-            rearrangeAccordingToInitialResponse(
+  
+        const pickupPlacesResponse = await fetchPickupPlaces();
+        const checkoutOptionsResponse = await fetchCheckoutOptions();
+  
+        if (!pickupPlacesResponse || !checkoutOptionsResponse) {
+          console.error("One or more API calls failed.");
+          return;
+        }
+  
+        // Storing initial responses for comparison
+        if (!initialCheckoutOptionsResponse) {
+          initialCheckoutOptionsResponse = JSON.parse(
+            JSON.stringify(checkoutOptionsResponse)
+          );
+          console.log("Initial Checkout Options Response:", initialCheckoutOptionsResponse);
+        }
+        if (!initialCartResponse) {
+          initialCartResponse = JSON.parse(JSON.stringify(cartResponse));
+          console.log("Initial Cart Response:", initialCartResponse);
+        } else {
+          // **Rearrange cartResponse based on `activityId`**
+          console.log("Initial Cart Activity Bookings:", initialCartResponse.data.activityBookings);
+          console.log("Current Cart Activity Bookings:", cartResponse.data.activityBookings);
+  
+          if (
+            !arraysMatch(
+              initialCartResponse.data.activityBookings,
+              cartResponse.data.activityBookings,
+              "activity.id"
+            )
+          ) {
+            const rearrangedActivityBookings = rearrangeAccordingToInitialResponse(
+              initialCartResponse.data.activityBookings,
+              cartResponse.data.activityBookings,
+              "activity.id"
+            );
+            console.log("Rearranged Cart Activity Bookings:", rearrangedActivityBookings);
+            cartResponse.data.activityBookings = rearrangedActivityBookings; // Update cart response
+          }
+  
+          // **Rearrange checkoutOptionsResponse**
+          console.log("Initial Checkout Activity Bookings:", initialCheckoutOptionsResponse.data.questions.activityBookings);
+          console.log("Current Checkout Activity Bookings:", checkoutOptionsResponse.data.questions.activityBookings);
+          console.log("Current Checkout product invoice Bookings:", checkoutOptionsResponse.data.options[0].invoice.productInvoices);
+          if (
+            !arraysMatch(
+              initialCheckoutOptionsResponse.data.questions.activityBookings,
+              checkoutOptionsResponse.data.questions.activityBookings,
+              "activityId"
+            )
+          ) {
+            const rearrangedCheckoutBookings = rearrangeAccordingToInitialResponse(
               initialCheckoutOptionsResponse.data.questions.activityBookings,
               checkoutOptionsResponse.data.questions.activityBookings,
               "activityId"
             );
+            console.log("Rearranged Checkout Activity Bookings:", rearrangedCheckoutBookings);
+            checkoutOptionsResponse.data.questions.activityBookings = rearrangedCheckoutBookings; // Update checkout options response
+          }
+          if (
+            !arraysMatch(
+              initialCheckoutOptionsResponse.data.options[0].invoice.productInvoices,
+              checkoutOptionsResponse.data.options[0].invoice.productInvoices,
+              "id"
+            )
+          ) {
+            const rearrangedProductInvoices = rearrangeAccordingToInitialResponse(
+              initialCheckoutOptionsResponse.data.options[0].invoice.productInvoices,
+              checkoutOptionsResponse.data.options[0].invoice.productInvoices,
+              "id"
+            );
+            console.log("Rearranged Product Invoices:", rearrangedProductInvoices);
+            checkoutOptionsResponse.data.options[0].invoice.productInvoices = rearrangedProductInvoices; // Update the response
+          }
         }
-      }
-
-      if (handleExtrasSection === true) {
-        checkoutModalRightSection(checkoutOptionsResponse, cartResponse);
+  
+        if (handleExtrasSection === true) {
+          checkoutModalRightSection(checkoutOptionsResponse, cartResponse);
+        } else {
+          handleCheckoutModal(
+            pickupPlacesResponse,
+            checkoutOptionsResponse,
+            cartResponse
+          );
+          $(".custom-checkout-modal-overlay").css("display", "flex");
+          $(".custom-bokun-modal-content").hide();
+          $("body").css("overflow", "hidden");
+        }
+  
+        handleExtras(cartResponse);
+        fillActivityTabs();
+  
+        const activityBookings =
+          checkoutOptionsResponse.data.questions.activityBookings;
+        bookingDetailsPassengers = activityBookings;
       } else {
-        handleCheckoutModal(
-          pickupPlacesResponse,
-          checkoutOptionsResponse,
-          cartResponse
-        );
-        $(".custom-checkout-modal-overlay").css("display", "flex");
-        $(".custom-bokun-modal-content").hide();
-        $("body").css("overflow", "hidden");
+        console.error("Add to cart failed.", cartResponse);
       }
-
-      handleExtras(cartResponse);
-      fillActivityTabs();
-
-      const activityBookings =
-        checkoutOptionsResponse.data.questions.activityBookings;
-      bookingDetailsPassengers = activityBookings;
-    } else {
-      console.error("Add to cart failed.", cartResponse);
+    } catch (error) {
+      console.error("An error occurred during API calls:", error);
     }
-  } catch (error) {
-    console.error("An error occurred during API calls:", error);
   }
-}
-
-// **Helper function to check if two arrays match (order & elements)**
-function arraysMatch(array1, array2, key) {
-  if (array1.length !== array2.length) return false;
-  return array1.every((item, index) => getNestedKey(item, key) === getNestedKey(array2[index], key));
-}
-
-// **Helper function to rearrange response based on initial order**
-function rearrangeAccordingToInitialResponse(
-  initialArray,
-  currentArray,
-  key
-) {
-  const currentArrayMap = new Map(currentArray.map((item) => [getNestedKey(item, key), item]));
-
-  // Keep initial order and include any missing items
-  const rearrangedArray = initialArray
-    .map((initialItem) => currentArrayMap.get(getNestedKey(initialItem, key)))
-    .filter(Boolean);
-
-  // Append new items at the end
-  const newItems = currentArray.filter(
-    (item) => !initialArray.some((initialItem) => getNestedKey(initialItem, key) === getNestedKey(item, key))
-  );
-
-  return [...rearrangedArray, ...newItems];
-}
-
-// **Helper function to get nested key values safely**
-function getNestedKey(obj, key) {
-  return key.split('.').reduce((acc, part) => acc && acc[part], obj);
-}
-
+  
+  function arraysMatch(array1, array2, key) {
+    if (array1.length !== array2.length) return false;
+    return array1.every((item, index) => getNestedKey(item, key) === getNestedKey(array2[index], key));
+  }
+  
+  function rearrangeAccordingToInitialResponse(initialArray, currentArray, key) {
+    const currentArrayMap = new Map(currentArray.map((item) => [getNestedKey(item, key), item]));
+  
+    const rearrangedArray = initialArray
+      .map((initialItem) => currentArrayMap.get(getNestedKey(initialItem, key)))
+      .filter(Boolean);
+  
+    const newItems = currentArray.filter(
+      (item) => !initialArray.some((initialItem) => getNestedKey(initialItem, key) === getNestedKey(item, key))
+    );
+  
+    return [...rearrangedArray, ...newItems];
+  }
+  
+  function getNestedKey(obj, key) {
+    return key.split('.').reduce((acc, part) => acc && acc[part], obj);
+  }
   
   
   function handleExtras(cartResponse) {
