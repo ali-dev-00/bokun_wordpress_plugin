@@ -3,6 +3,10 @@ var activityTabData = {};
 var mainContactDetails = {};
 var checkoutTabData = [];
 var bookingDetailsPassengers;
+var initialCheckoutOptionsResponse = null;
+var initialCartResponse = null;
+var cartResponse = null;
+var checkoutOptionsResponse = null;
 jQuery(function ($) {
 
   function storeMainContactDetails(mainContactDetails) {
@@ -279,9 +283,7 @@ jQuery(function ($) {
   }
 
 
-  let initialCheckoutOptionsResponse = null;
-  let initialCartResponse = null; // Stores the first cart response for order tracking
-  
+
   async function handleCheckoutModalApiCalls(
     flag = "add",
     productConfirmationCode = null,
@@ -297,7 +299,7 @@ jQuery(function ($) {
     var date = $button.data("date");
     var startTimeId = $selectedTimeSlot.data("starttimeid");
     date = formatDateToISO(date);
-  
+
     if (
       (bookableExtras === null && !activityId) ||
       !rateId ||
@@ -314,7 +316,7 @@ jQuery(function ($) {
         passengers
       );
     }
-  
+
     const sessionId = getOrCreateSessionId();
     try {
       let requestDataForCart;
@@ -335,9 +337,9 @@ jQuery(function ($) {
           currency: localStorage.getItem("currency"),
         };
       }
-  
+
       console.log("requestDataForCart for request", requestDataForCart);
-  
+
       const addToCart = () =>
         $.ajax({
           url: bokunAjax.ajaxUrl,
@@ -389,103 +391,129 @@ jQuery(function ($) {
             currency: localStorage.getItem("currency"),
           },
         });
-  
-      let cartResponse;
+
+      let cartApiResponse;
       if (flag === "remove") {
-        cartResponse = await removeActivityFromCart();
+        cartApiResponse = await removeActivityFromCart();
       }
       if (flag === "add") {
-        cartResponse = await addToCart();
+        cartApiResponse = await addToCart();
       }
       if (flag === "show") {
-        cartResponse = await fetchCartDetails();
+        cartApiResponse = await fetchCartDetails();
       }
-  
-      if (cartResponse.success) {
-        const totalPrice = cartResponse.data.totalPrice ?? 0;
+
+      if (cartApiResponse.success) {
+        const totalPrice = cartApiResponse.data.totalPrice ?? 0;
         if (totalPrice <= 0) {
-          const message = cartResponse.data.fields.errorResponse ?? "Invalid Data";
+          const message = cartApiResponse.data.fields.errorResponse ?? "Invalid Data";
           $(".error-message-cart").html(message);
           console.log("Cart is empty, displaying error message.");
           return;
         }
-  
+
         const pickupPlacesResponse = await fetchPickupPlaces();
-        const checkoutOptionsResponse = await fetchCheckoutOptions();
-  
-        if (!pickupPlacesResponse || !checkoutOptionsResponse) {
+        const checkoutOptionsApiResponse = await fetchCheckoutOptions();
+
+        if (!pickupPlacesResponse || !checkoutOptionsApiResponse) {
           console.error("One or more API calls failed.");
           return;
         }
-  
-        // Storing initial responses for comparison
-        if (!initialCheckoutOptionsResponse) {
-          initialCheckoutOptionsResponse = JSON.parse(
-            JSON.stringify(checkoutOptionsResponse)
-          );
-          console.log("Initial Checkout Options Response:", initialCheckoutOptionsResponse);
-        }
-        if (!initialCartResponse) {
-          initialCartResponse = JSON.parse(JSON.stringify(cartResponse));
-          console.log("Initial Cart Response:", initialCartResponse);
+
+        if (initialCartResponse === null && initialCheckoutOptionsResponse === null) {
+          initialCartResponse = cartApiResponse;
+          initialCheckoutOptionsResponse = checkoutOptionsApiResponse;
+          cartResponse = cartApiResponse;
+          checkoutOptionsResponse = checkoutOptionsApiResponse;
         } else {
-          // **Rearrange cartResponse based on `activityId`**
-          console.log("Initial Cart Activity Bookings:", initialCartResponse.data.activityBookings);
-          console.log("Current Cart Activity Bookings:", cartResponse.data.activityBookings);
-  
-          if (
-            !arraysMatch(
-              initialCartResponse.data.activityBookings,
-              cartResponse.data.activityBookings,
-              "activity.id"
-            )
-          ) {
-            const rearrangedActivityBookings = rearrangeAccordingToInitialResponse(
-              initialCartResponse.data.activityBookings,
-              cartResponse.data.activityBookings,
-              "activity.id"
-            );
-            console.log("Rearranged Cart Activity Bookings:", rearrangedActivityBookings);
-            cartResponse.data.activityBookings = rearrangedActivityBookings; // Update cart response
-          }
-  
-          // **Rearrange checkoutOptionsResponse**
-          console.log("Initial Checkout Activity Bookings:", initialCheckoutOptionsResponse.data.questions.activityBookings);
-          console.log("Current Checkout Activity Bookings:", checkoutOptionsResponse.data.questions.activityBookings);
-          console.log("Current Checkout product invoice Bookings:", checkoutOptionsResponse.data.options[0].invoice.productInvoices);
-          if (
-            !arraysMatch(
-              initialCheckoutOptionsResponse.data.questions.activityBookings,
-              checkoutOptionsResponse.data.questions.activityBookings,
-              "activityId"
-            )
-          ) {
-            const rearrangedCheckoutBookings = rearrangeAccordingToInitialResponse(
-              initialCheckoutOptionsResponse.data.questions.activityBookings,
-              checkoutOptionsResponse.data.questions.activityBookings,
-              "activityId"
-            );
-            console.log("Rearranged Checkout Activity Bookings:", rearrangedCheckoutBookings);
-            checkoutOptionsResponse.data.questions.activityBookings = rearrangedCheckoutBookings; // Update checkout options response
-          }
-          if (
-            !arraysMatch(
-              initialCheckoutOptionsResponse.data.options[0].invoice.productInvoices,
-              checkoutOptionsResponse.data.options[0].invoice.productInvoices,
-              "id"
-            )
-          ) {
-            const rearrangedProductInvoices = rearrangeAccordingToInitialResponse(
-              initialCheckoutOptionsResponse.data.options[0].invoice.productInvoices,
-              checkoutOptionsResponse.data.options[0].invoice.productInvoices,
-              "id"
-            );
-            console.log("Rearranged Product Invoices:", rearrangedProductInvoices);
-            checkoutOptionsResponse.data.options[0].invoice.productInvoices = rearrangedProductInvoices; // Update the response
+          if (flag === "add") {
+            // Rearrange `activityBookings` in `cartapiresponse`
+            if (
+              !arraysMatch(
+                initialCartResponse.data.activityBookings,
+                cartApiResponse.data.activityBookings,
+                "activity.id"
+              )
+            ) {
+              const rearrangedActivityBookings = rearrangeAccordingToInitialResponse(
+                initialCartResponse.data.activityBookings,
+                cartApiResponse.data.activityBookings,
+                "activity.id"
+              );
+              cartApiResponse.data.activityBookings = rearrangedActivityBookings;
+            }
+            // Rearrange `activityBookings` in `checkoutoptionsapiresponse`
+            if (
+              !arraysMatch(
+                initialCheckoutOptionsResponse.data.questions.activityBookings,
+                checkoutOptionsApiResponse.data.questions.activityBookings,
+                "activityId"
+              )
+            ) {
+              const rearrangedActivityBookings = rearrangeAccordingToInitialResponse(
+                initialCheckoutOptionsResponse.data.questions.activityBookings,
+                checkoutOptionsApiResponse.data.questions.activityBookings,
+                "activityId"
+              );
+              console.log("Rearranged Checkout Activity Bookings:", rearrangedActivityBookings);
+              checkoutOptionsApiResponse.data.questions.activityBookings = rearrangedActivityBookings;
+            }
+
+            // Rearrange `productinvoices` in `checkoutoptionsapiresponse`
+            if (
+              !arraysMatch(
+                initialCheckoutOptionsResponse.data.options[0].invoice.productInvoices,
+                checkoutOptionsApiResponse.data.options[0].invoice.productInvoices,
+                "product.id"
+              )
+            ) {
+              const rearrangedProductInvoices = rearrangeAccordingToInitialResponse(
+                initialCheckoutOptionsResponse.data.options[0].invoice.productInvoices,
+                checkoutOptionsApiResponse.data.options[0].invoice.productInvoices,
+                "product.id"
+              );
+              console.log("Rearranged Product Invoices:", rearrangedProductInvoices);
+              checkoutOptionsApiResponse.data.options[0].invoice.productInvoices = rearrangedProductInvoices;
+
+
+            } else {
+
+              initialCartResponse = JSON.parse(JSON.stringify(cartApiResponse));
+              initialCheckoutOptionsResponse = JSON.parse(JSON.stringify(checkoutOptionsApiResponse));
+            }
+
+            // // Rearrange `productinvoices` in `cartApiresponse`
+            // if (
+            //   !arraysMatch(
+            //     initialCartResponse.customerInvoice.productInvoices,
+            //     checkoutOptionsApiResponse.customerInvoice.productInvoices,
+            //     "product.id"
+            //   )
+            // ) {
+            //   const rearrangedProductInvoices = rearrangeAccordingToInitialResponse(
+            //     initialCartResponse.customerInvoice.productInvoices,
+            //     checkoutOptionsApiResponse.customerInvoice.productInvoices,
+            //     "product.id"
+            //   );
+            //   console.log("Rearranged Product Invoices:", rearrangedProductInvoices);
+            //   checkoutOptionsApiResponse.data.options[0].invoice.productInvoices = rearrangedProductInvoices;
+
+
+            // } else {
+
+            //   initialCartResponse = JSON.parse(JSON.stringify(cartApiResponse));
+            //   initialCheckoutOptionsResponse = JSON.parse(JSON.stringify(checkoutOptionsApiResponse));
+            // }
+
+            cartResponse = cartApiResponse;
+            checkoutOptionsResponse = checkoutOptionsApiResponse;
+
+            initialCartResponse = JSON.parse(JSON.stringify(cartApiResponse));
+            initialCheckoutOptionsResponse = JSON.parse(JSON.stringify(checkoutOptionsApiResponse));
           }
         }
-  
-        if (handleExtrasSection === true) {
+
+        if (handleExtrasSection) {
           checkoutModalRightSection(checkoutOptionsResponse, cartResponse);
         } else {
           handleCheckoutModal(
@@ -497,10 +525,10 @@ jQuery(function ($) {
           $(".custom-bokun-modal-content").hide();
           $("body").css("overflow", "hidden");
         }
-  
+
         handleExtras(cartResponse);
         fillActivityTabs();
-  
+
         const activityBookings =
           checkoutOptionsResponse.data.questions.activityBookings;
         bookingDetailsPassengers = activityBookings;
@@ -511,31 +539,31 @@ jQuery(function ($) {
       console.error("An error occurred during API calls:", error);
     }
   }
-  
+
   function arraysMatch(array1, array2, key) {
     if (array1.length !== array2.length) return false;
     return array1.every((item, index) => getNestedKey(item, key) === getNestedKey(array2[index], key));
   }
-  
+
   function rearrangeAccordingToInitialResponse(initialArray, currentArray, key) {
     const currentArrayMap = new Map(currentArray.map((item) => [getNestedKey(item, key), item]));
-  
+
     const rearrangedArray = initialArray
       .map((initialItem) => currentArrayMap.get(getNestedKey(initialItem, key)))
       .filter(Boolean);
-  
+
     const newItems = currentArray.filter(
       (item) => !initialArray.some((initialItem) => getNestedKey(initialItem, key) === getNestedKey(item, key))
     );
-  
+
     return [...rearrangedArray, ...newItems];
   }
-  
+
   function getNestedKey(obj, key) {
     return key.split('.').reduce((acc, part) => acc && acc[part], obj);
   }
-  
-  
+
+
   function handleExtras(cartResponse) {
     console.log("Loop running for extras...");
     const activityList = cartResponse.data.activityBookings;
@@ -1157,6 +1185,10 @@ jQuery(function ($) {
         .then(() => {
           clickedElement.slideUp(300, function () {
             $(this).remove();
+            cartResponse = null;
+            checkoutOptionsResponse = null;
+            initialCartResponse = null;
+            initialCheckoutOptionsResponse = null;
             if ($(".custom-checkout-promo-item").length === 0) {
               $(".custom-checkout-modal-overlay").css("display", "none");
               $("#modal").css("display", "none");
@@ -1220,6 +1252,10 @@ jQuery(function ($) {
     $(".custom-checkout-modal-overlay").css("display", "none");
     $(".custom-bokun-modal-content").show();
     $("body").css("overflow", "auto");
+    checkoutOptionsResponse = null;
+    initialCheckoutOptionsResponse = null;
+    cartResponse = null;
+    initialCartResponse = null;
   });
   $(document).on("click", ".custom-checkout-modal-overlay", function (e) {
     const $overlay = $(".custom-checkout-modal-overlay");
