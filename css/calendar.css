@@ -203,7 +203,7 @@
     border-radius: 4px;
 }
 .custom-bokun-package-option .package-option-title {
-    font-weight: 100;
+    font-weight: 600 !important;
     font-size: 14px !important;
     padding: 10px;
     overflow: hidden;
