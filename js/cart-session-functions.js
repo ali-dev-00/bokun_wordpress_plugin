@@ -9,22 +9,14 @@ var cartResponse = null;
 var checkoutOptionsResponse = null;
 jQuery(function ($) {
   function getPreviousDate(dateString) {
-    // If a dash is present, assume everything before it is the date part.
     const datePart = dateString.includes('-')
       ? dateString.split('-')[0].trim()
       : dateString.trim();
-    
-    // Parse the date. If the date is invalid, you can choose how to handle it.
     const dateObj = new Date(datePart);
     if (isNaN(dateObj)) {
-      // Fallback: return the original string or handle the error as needed.
       return dateString;
     }
-    
-    // Subtract one day.
     dateObj.setDate(dateObj.getDate() - 1);
-    
-    // Format the new date.
     return dateObj.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'long',
@@ -32,8 +24,7 @@ jQuery(function ($) {
       year: 'numeric'
     });
   }
-  
-  
+
   function storeMainContactDetails(mainContactDetails) {
     $.ajax({
       url: bokunAjax.ajaxUrl,
@@ -57,13 +48,6 @@ jQuery(function ($) {
   }
   function storeActivityTabData() {
     const sessionId = getOrCreateSessionId();
-
-
-    console.log(typeof activityTabData, "typeof activity")
-
-    console.log("activityTabData", activityTabData)
-    console.log("Storing activityTabData:", JSON.stringify(activityTabData))
-
     $.ajax({
       url: bokunAjax.ajaxUrl,
       method: "POST",
@@ -86,16 +70,12 @@ jQuery(function ($) {
       },
     });
   }
-
-
-
   function getStoredData() {
     const sessionId = getOrCreateSessionId();
     if (!sessionId) {
       console.error("❌ Invalid session ID.");
       return;
     }
-
     $.ajax({
       url: bokunAjax.ajaxUrl,
       method: "POST",
@@ -120,9 +100,7 @@ jQuery(function ($) {
       }
     });
   }
-
   getStoredData();
-
   function fillForm(moveNext = false) {
     if (!mainContactDetails || !Array.isArray(mainContactDetails)) {
       return;
@@ -185,7 +163,6 @@ jQuery(function ($) {
             $(matchedLi).parent().removeClass("show");
           }
         }
-
         const pickupInput = document.getElementById(`pickupSearch_${index}`);
         if (pickupInput) {
           pickupInput.value = pickupTitle;
@@ -225,13 +202,10 @@ jQuery(function ($) {
             $(matchedLi).parent().removeClass("show"); // Hide dropdown after selection
           }
         }
-
         const dropoffInput = document.getElementById(`dropoffSearch_${index}`);
         if (dropoffInput) {
           dropoffInput.value = dropoffTitle;
         }
-
-        // Ensure room number visibility is updated
         setTimeout(() => {
           const $roomNumberContainer = $(`#dropoffSearch_${index}RoomNumberContainer`);
           const $roomNumberInput = $(`#dropoffSearch_${index}RoomNumber`);
@@ -272,8 +246,6 @@ jQuery(function ($) {
           }
         });
       }
-
-
     });
   }
 
@@ -1567,7 +1539,6 @@ jQuery(function ($) {
       })
         .join("")}
       <!-- Refund Terms -->
-    
       <div class="custom-checkout-step" data-step="${checkoutExperience.length + 2
       }" style="display: none;">
        <h2 class="custom-checkout-step-3-section-title">Cancellation policy</h2>
@@ -1590,8 +1561,6 @@ jQuery(function ($) {
                   <li>Non-refundable after ${getPreviousDate(experience.dates)}</li>
               </ul>
             `).join("")}
-            
-          
              </div>
          </div>
          <div class="custom-checkout-step-3-continue-btn">
@@ -2148,9 +2117,6 @@ jQuery(function ($) {
     });
     fillActivityTabs();
   }
-
-
-
   $(document).on("click", "#confirmButton", async function () {
     var $button = $(this);
     $button.prop("disabled", true).html(`
@@ -2251,10 +2217,6 @@ jQuery(function ($) {
         activityBookings: filteredActivityBookings,
       },
     };
-
-
-
-
     console.log("Final Shopping Cart:", shoppingCart);
 
     $.ajax({
@@ -2277,8 +2239,6 @@ jQuery(function ($) {
           console.log("Redirecting to:", response.data.redirect_url);
         } else {
           console.error("Redirect URL not found in response:", response);
-
-          // Show the warning message using jQuery
           $(".booking-warning").attr("style", "display: block !important;");
 
         }
