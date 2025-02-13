@@ -8,7 +8,32 @@ var initialCartResponse = null;
 var cartResponse = null;
 var checkoutOptionsResponse = null;
 jQuery(function ($) {
-
+  function getPreviousDate(dateString) {
+    // If a dash is present, assume everything before it is the date part.
+    const datePart = dateString.includes('-')
+      ? dateString.split('-')[0].trim()
+      : dateString.trim();
+    
+    // Parse the date. If the date is invalid, you can choose how to handle it.
+    const dateObj = new Date(datePart);
+    if (isNaN(dateObj)) {
+      // Fallback: return the original string or handle the error as needed.
+      return dateString;
+    }
+    
+    // Subtract one day.
+    dateObj.setDate(dateObj.getDate() - 1);
+    
+    // Format the new date.
+    return dateObj.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+  
+  
   function storeMainContactDetails(mainContactDetails) {
     $.ajax({
       url: bokunAjax.ajaxUrl,
@@ -1561,10 +1586,11 @@ jQuery(function ($) {
               <h4>${experience.product.title ?? ""}</h4>
               <p><strong>Cancellation policy</strong></p>
               <ul>
-                  <li>Fully refundable until ${experience.dates ?? ""}</li>
-                  <li>Non-refundable after ${experience.dates ?? ""}</li>
+                  <li>Fully refundable until ${getPreviousDate(experience.dates)}</li>
+                  <li>Non-refundable after ${getPreviousDate(experience.dates)}</li>
               </ul>
-          `).join("")}
+            `).join("")}
+            
           
              </div>
          </div>
