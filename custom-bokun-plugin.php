@@ -180,6 +180,7 @@ require_once plugin_dir_path(__FILE__) . 'create-db-tables.php';
 require_once plugin_dir_path(__FILE__) . 'create-api-signature.php';
 require_once plugin_dir_path(__FILE__) . 'render-experiences.php';
 require_once plugin_dir_path(__FILE__) . 'render-products.php';
+require_once plugin_dir_path(__FILE__) . 'fetch-product-list-byid.php';
 require_once plugin_dir_path(__FILE__) . 'experience-detail-modal.php';
 require_once plugin_dir_path(__FILE__) . 'cart-session-functions.php';
 require_once plugin_dir_path(__FILE__) . 'settings-page.php';
