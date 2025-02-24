@@ -4,8 +4,8 @@ Plugin Name: Custom Bokun Plugin
 Plugin URI: https://example.com
 Description: Fetch and display products from Bokun's API.
 Version: 1.0
-Author: Your Name
-Author URI: https://example.com
+Author: Ali Haider
+Author URI: https://www.linkedin.com/in/mirza-ali-dev/ 
 License: GPL2
 */
 if (!defined('ABSPATH')) {
