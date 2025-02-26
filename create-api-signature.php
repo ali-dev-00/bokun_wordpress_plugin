@@ -1,7 +1,7 @@
 <?php
 function authenticateBokunApi($method, $path, $body = null) {
-    $accessKey = 'a8631bded93c4f96b94b34d6649ba4ec';
-    $secretKey = 'f76d4a3d8d104b6e8675a0e3ac5f1d8d';
+    $accessKey = 'BOKUN_ACCESS_KEY';
+    $secretKey = 'BOKUN_SECRET_KEY';
     $base_url = 'https://api.bokun.io';
     $date = gmdate("Y-m-d H:i:s");
     $data = $date . $accessKey . $method . $path;
